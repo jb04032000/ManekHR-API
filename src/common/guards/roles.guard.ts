@@ -30,9 +30,6 @@ import {
   applyPathOverrides,
   type PathOverride,
 } from '../../modules/rbac/permission-path-overrides';
-import { PERMISSION_REGISTRY } from '../../modules/rbac/permission-registry';
-import { accountantGrantsFromInvite } from '../../modules/finance/accountant-invite/accountant-access';
-
 interface WorkspaceForOwnerCheck {
   ownerId?: mongoose.Types.ObjectId | string;
   /** Soft-delete flag (user-side delete = hide + keep). A soft-deleted
@@ -201,10 +198,7 @@ type CallerContext =
       role: RoleRow;
       overrides: PermissionOverride[];
       pathOverrides: PathOverride[];
-    }
-  // External accountant (SEC-3): not a workspace member — access is the explicit
-  // leaf-grant list derived from their accepted AccountantInvite.
-  | { kind: 'accountant'; grantedPaths: GrantedPermission[] };
+    };
 
 /** Cached resolved caller context — see `RolesGuard.callerCache`. */
 interface CallerCacheEntry {
@@ -319,23 +313,6 @@ export class RolesGuard implements CanActivate {
       // Owner — implicit full access (verified-correct, audit §4).
       if (caller.kind === 'owner') {
         return true;
-      }
-
-      // External accountant (SEC-3) — match the required PATH against the
-      // explicit leaf grants derived from the accepted invite. Legacy flat
-      // (`@RequirePermissions`) routes have no accountant mapping and fail
-      // closed: an accountant only ever reaches path-gated finance/team/salary
-      // reads (+ adjusting-entry finance writes).
-      if (caller.kind === 'accountant') {
-        if (requirePath && pathGrantSatisfies(caller.grantedPaths, requirePath)) {
-          return true;
-        }
-        this.deny(
-          request,
-          requirePath
-            ? `path ${requirePath.path} (accountant)`
-            : 'accountant access (legacy route)',
-        );
       }
 
       // 3. @RequirePermission — hierarchical path check.
@@ -468,17 +445,17 @@ export class RolesGuard implements CanActivate {
 
     // REMOVED-MEMBER SECURITY GUARANTEE (RBAC-hardening Pillar 1):
     // membership is filtered to `status: 'active'`. An offboarded/removed member
-    // (WorkspaceMember.status === 'removed') is NOT found here and falls straight
-    // through to the accountant probe → fail-closed deny BELOW. The per-member
-    // override merge (applyPermissionOverrides / applyPathOverrides further down)
-    // is reached ONLY after this active-member lookup succeeds, so leftover
-    // `permissionOverrides` / `permissionPathOverrides` rows on a removed member
-    // can NEVER resurrect access — they are inert the instant the member leaves.
-    // The retention cron clears those now-orphaned arrays after the keep window;
-    // even before it runs, they grant zero effective access. (Defence in depth:
-    // the offboard flow also flips the Redis revocation denylist (checked above)
-    // and nulls TeamMember.linkedUserId + sets isDeleted, so the override lookup
-    // — keyed on linkedUserId + isDeleted:false — would miss too.)
+    // (WorkspaceMember.status === 'removed') is NOT found here and fails closed
+    // BELOW. The per-member override merge (applyPermissionOverrides /
+    // applyPathOverrides further down) is reached ONLY after this active-member
+    // lookup succeeds, so leftover `permissionOverrides` /
+    // `permissionPathOverrides` rows on a removed member can NEVER resurrect
+    // access — they are inert the instant the member leaves. The retention cron
+    // clears those now-orphaned arrays after the keep window; even before it
+    // runs, they grant zero effective access. (Defence in depth: the offboard
+    // flow also flips the Redis revocation denylist (checked above) and nulls
+    // TeamMember.linkedUserId + sets isDeleted, so the override lookup — keyed
+    // on linkedUserId + isDeleted:false — would miss too.)
     const member = await memberModel
       .findOne({
         workspaceId: new mongoose.Types.ObjectId(workspaceId),
@@ -487,10 +464,6 @@ export class RolesGuard implements CanActivate {
       })
       .exec();
     if (!member) {
-      // Not a workspace member — they may still be an accepted external
-      // accountant (SEC-3). Resolve from the invite before failing closed.
-      const accountant = await this.resolveAccountantCaller(workspaceId, userId);
-      if (accountant) return accountant;
       this.logger.warn(`Denied — not a member of workspace ${workspaceId} (user ${userId})`);
       throw new ForbiddenException('You are not a member of this workspace');
     }
@@ -540,50 +513,6 @@ export class RolesGuard implements CanActivate {
     const pathOverrides: PathOverride[] = teamMember?.permissionPathOverrides ?? [];
 
     return { kind: 'member', role, overrides, pathOverrides };
-  }
-
-  /**
-   * Resolve an external accountant's authorization context from their accepted
-   * AccountantInvite (SEC-3). The invite is the source of truth for the
-   * accountant's module permissions + scopeRole; the granular permissions are
-   * translated into explicit leaf grants by `accountantGrantsFromInvite`.
-   * Revoking the invite (which deletes the row) immediately removes access.
-   * Returns null when the user is not an accepted accountant for this
-   * workspace, so the caller falls through to the not-a-member denial.
-   * Fail-closed on any lookup error (model missing / transient DB error).
-   */
-  private async resolveAccountantCaller(
-    workspaceId: string,
-    userId: string,
-  ): Promise<CallerContext | null> {
-    try {
-      const inviteModel = this.moduleRef.get<
-        Model<{
-          modulePermissions?: { module: string; access: string }[];
-          scopeRole?: string;
-        }>
-      >(getModelToken('AccountantInvite'), { strict: false });
-      const invite = await inviteModel
-        .findOne({
-          workspaceId: new mongoose.Types.ObjectId(workspaceId),
-          acceptedByUserId: new mongoose.Types.ObjectId(userId),
-          status: 'accepted',
-        })
-        .select('modulePermissions scopeRole')
-        .lean()
-        .exec();
-      if (!invite) return null;
-      const grantedPaths = accountantGrantsFromInvite(
-        {
-          scopeRole: invite.scopeRole ?? 'read_only',
-          modulePermissions: invite.modulePermissions ?? [],
-        },
-        PERMISSION_REGISTRY,
-      );
-      return { kind: 'accountant', grantedPaths };
-    } catch {
-      return null;
-    }
   }
 
   /** Log + throw a uniform 403 for a failed permission check. */

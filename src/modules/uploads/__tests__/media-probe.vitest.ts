@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveUploadPolicy } from '../upload-policies';
+import type { UploadPolicy } from '../upload-policies';
 import {
   evaluateAudioDuration,
   evaluateImageDimensions,
@@ -59,9 +59,24 @@ function png(w: number, h: number): Buffer {
   return Buffer.concat([sig, ihdr]);
 }
 
-const AUDIO_POLICY = resolveUploadPolicy('connect-audio'); // duration cap 180
-const BANNER_POLICY = resolveUploadPolicy('connect-banners'); // 4:1 tol 0.6
-const PORTFOLIO_POLICY = resolveUploadPolicy('connect-portfolio'); // image, no aspect cap
+// Inline policy fixtures (the Connect categories that used to carry these
+// constraints were removed; the probe machinery is category-agnostic and only
+// reads `duration.max` + `image.aspectRatio` off the policy shape).
+const MB = 1024 * 1024;
+const AUDIO_POLICY: UploadPolicy = {
+  maxBytes: 10 * MB,
+  mimeTypes: ['audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav'],
+  duration: { max: 180 }, // duration cap 180
+};
+const BANNER_POLICY: UploadPolicy = {
+  maxBytes: 5 * MB,
+  mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  image: { aspectRatio: { ratio: 4, tolerance: 0.6 } }, // 4:1 tol 0.6
+};
+const PORTFOLIO_POLICY: UploadPolicy = {
+  maxBytes: 5 * MB,
+  mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+}; // image, no aspect cap, no duration cap
 
 // ── Audio duration (real parser) ──────────────────────────────────────────
 
@@ -166,12 +181,11 @@ describe('banner aspect-ratio enforcement', () => {
 
 describe('evaluators', () => {
   it('passes audio through when the category has no duration cap', () => {
-    // connect-posts now carries a video-only 120s cap, so use a genuinely
-    // uncapped image category here.
+    // Use a genuinely uncapped image policy here.
     expect(
       evaluateAudioDuration({
         durationSec: 9999,
-        policy: resolveUploadPolicy('connect-portfolio'),
+        policy: PORTFOLIO_POLICY,
       }),
     ).toBeNull();
   });

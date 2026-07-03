@@ -16,7 +16,6 @@ vi.mock('@nestjs/mongoose', () => {
 });
 
 import { SessionCleanupCron } from '../sessions/session-cleanup.cron';
-import { RecycleBinCron } from '../finance/recycle-bin/recycle-bin.cron';
 import { InviteExpiryCron } from '../workspaces/invite-expiry.cron';
 import { OffboardCron } from '../team/offboard.cron';
 import { CronJobKey } from '../../common/constants/cron.constants';
@@ -35,7 +34,7 @@ function lock(grant: boolean) {
   };
 }
 
-const noDeleted = { deletedCount: 0 };
+// Recycle-bin cron (Finance) was removed with the Finance product (2026-07-04).
 
 function build(idx: number, lockSvc: any, probe: () => void): Promise<unknown> {
   switch (idx) {
@@ -46,15 +45,6 @@ function build(idx: number, lockSvc: any, probe: () => void): Promise<unknown> {
         lockSvc,
       ).handleCron();
     case 1:
-      // recycle-bin: process() -> Promise.all([deleteMany x4]); partyModel is the probe.
-      return new RecycleBinCron(
-        { deleteMany: () => Promise.resolve((probe(), noDeleted)) } as any,
-        { deleteMany: () => Promise.resolve(noDeleted) } as any,
-        { deleteMany: () => Promise.resolve(noDeleted) } as any,
-        { deleteMany: () => Promise.resolve(noDeleted) } as any,
-        lockSvc,
-      ).purgeOldDeleted();
-    case 2:
       // invite-expiry: process() -> memberModel.find().limit().exec() (probe).
       return new InviteExpiryCron(
         { find: () => ({ limit: () => ({ exec: () => Promise.resolve((probe(), [])) }) }) } as any,
@@ -62,11 +52,10 @@ function build(idx: number, lockSvc: any, probe: () => void): Promise<unknown> {
         {} as any,
         lockSvc,
       ).run();
-    case 3:
+    case 2:
       // offboard: process() -> teamModel.find().select().exec() (probe).
       return new OffboardCron(
         { find: () => ({ select: () => ({ exec: () => Promise.resolve((probe(), [])) }) }) } as any,
-        {} as any,
         lockSvc,
       ).handleCron();
     default:
@@ -76,7 +65,6 @@ function build(idx: number, lockSvc: any, probe: () => void): Promise<unknown> {
 
 const expected = [
   CronJobKey.SESSION_CLEANUP,
-  CronJobKey.RECYCLE_BIN_PURGE,
   CronJobKey.INVITE_EXPIRY_SWEEP,
   CronJobKey.OFFBOARD_CRON,
 ];

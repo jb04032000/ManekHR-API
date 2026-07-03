@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { PushAdapter } from '../finance/reminders/adapters/push.adapter';
+import { PushAdapterService } from './push-adapter.service';
 import { UserDevice } from './schemas/user-device.schema';
 import { RegisterDeviceDto } from './dto/register-device.dto';
 
@@ -33,7 +33,7 @@ export class UserDevicesService {
   constructor(
     @InjectModel(UserDevice.name)
     private readonly deviceModel: Model<UserDevice>,
-    private readonly push: PushAdapter,
+    private readonly push: PushAdapterService,
   ) {}
 
   /**

@@ -282,10 +282,13 @@ export const DEFAULT_MANAGER_ROLE: DefaultRoleDefinition = {
     // that resolution while the guard (permissionsSatisfy, .some) matches either
     // row. Owner grants this per-member via Grant App Access for non-Manager roles.
     grant(AppModule.SALARY, [ModuleAction.REVIEW_ADVANCE], 'self'),
-    // ManekHR EXCLUDE enforcement: LOCATIONS module grant removed from the seeded
-    // default Manager (same rationale as MACHINES — disabled ops-cluster module
-    // whose VIEW route lacks a subscription gate). Restore if the ops cluster is
-    // ever sold.
+    // Locations restored standalone (2026-07-04, owner directive) — Manager can
+    // view + manage the Workspace Settings location list.
+    grant(
+      AppModule.LOCATIONS,
+      [ModuleAction.VIEW, ModuleAction.CREATE, ModuleAction.EDIT, ModuleAction.REMOVE],
+      'all',
+    ),
     grant(AppModule.ROLES, [ModuleAction.VIEW], 'all'),
     grant(AppModule.WORKSPACES, [ModuleAction.VIEW], 'all'),
     grant(
@@ -591,9 +594,12 @@ export const DEFAULT_PARTNER_ROLE: DefaultRoleDefinition = {
       [ModuleAction.VIEW, ModuleAction.EDIT, ModuleAction.SENSITIVE_VIEW, ModuleAction.DECLARE_TAX],
       'all',
     ),
-    // ManekHR EXCLUDE enforcement: LOCATIONS module grant removed from the seeded
-    // default Partner (same rationale as MACHINES). Restore if the ops cluster is
-    // ever sold.
+    // Locations restored standalone (2026-07-04, owner directive).
+    grant(
+      AppModule.LOCATIONS,
+      [ModuleAction.VIEW, ModuleAction.CREATE, ModuleAction.EDIT, ModuleAction.REMOVE],
+      'all',
+    ),
     grant(AppModule.ROLES, [ModuleAction.VIEW], 'all'),
     grant(AppModule.WORKSPACES, [ModuleAction.VIEW], 'all'),
     grant(

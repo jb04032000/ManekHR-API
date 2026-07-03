@@ -14,7 +14,7 @@ import { Cron } from '@nestjs/schedule';
 import * as Sentry from '@sentry/node';
 import { Plan, PlanEntitlements } from './schemas/plan.schema';
 import { Subscription } from './schemas/subscription.schema';
-import { AppSettings } from './schemas/app-settings.schema';
+import { AppSettings, DEFAULT_COMING_SOON_MODULES } from './schemas/app-settings.schema';
 import { Tier } from './schemas/tier.schema';
 import { Workspace } from '../workspaces/schemas/workspace.schema';
 import { WorkspaceMember } from '../workspaces/schemas/workspace-member.schema';
@@ -1272,6 +1272,21 @@ export class SubscriptionsService implements OnApplicationBootstrap {
     }
 
     return { enabled, headlineOverride, days };
+  }
+
+  /**
+   * PUBLIC-safe module-availability config for the locked-module presentation.
+   * Returns ONLY the comingSoonModules list (nothing else from AppSettings).
+   * The web renders a "Coming Soon" card / nav badge instead of the upgrade
+   * prompt for these modules when locked — presentation-only, the
+   * SubscriptionGuard 403 gate is untouched. Fresh DB (no settings doc) =
+   * DEFAULT_COMING_SOON_MODULES (the ManekHR not-yet-built set).
+   */
+  async getPublicModuleAvailability(): Promise<{ comingSoonModules: string[] }> {
+    const settings = await this.appSettingsModel.findOne().exec();
+    return {
+      comingSoonModules: settings?.comingSoonModules ?? [...DEFAULT_COMING_SOON_MODULES],
+    };
   }
 
   /**

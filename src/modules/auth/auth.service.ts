@@ -69,10 +69,6 @@ import { getModelToken } from '@nestjs/mongoose';
 import { AuditService } from '../audit/audit.service';
 import { AppModule } from '../../common/enums/modules.enum';
 import { PostHogService } from '../../common/posthog/posthog.service';
-// Connect Referral Program — best-effort signup attribution. Provided by
-// ConnectReferralsModule (imported by AuthModule); the attach call is internally
-// try/caught AND .catch()-guarded here so a referral failure can never fail auth.
-import { ReferralService } from '../connect/referrals/services/referral.service';
 
 @Injectable()
 export class AuthService {
@@ -92,53 +88,8 @@ export class AuthService {
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     private workspacesService: WorkspacesService,
     private postHog: PostHogService,
-    // Connect Referral Program: signup attribution (best-effort, never blocks auth).
-    private referralService: ReferralService,
   ) {
     this.googleClient = new OAuth2Client(this.configService.get<string>('google.clientId'));
-  }
-
-  /**
-   * SHA-256 hex of a signup IP for referral fraud signals -- NEVER stores the raw
-   * IP/PII. Returns undefined when no IP was supplied (the field is then omitted
-   * from signupContext). Connect Referral Program; consumed by
-   * ReferralService.attachReferralAtSignup.
-   */
-  private hashIp(ip?: string): string | undefined {
-    const trimmed = (ip || '').trim();
-    if (!trimmed) return undefined;
-    return crypto.createHash('sha256').update(trimmed).digest('hex');
-  }
-
-  /**
-   * Fire the best-effort referral attribution after a fresh signup. The
-   * underlying service is internally try/caught AND we add `.catch` here, so a
-   * referral failure can NEVER fail or delay the signup response. Connect
-   * Referral Program. No-ops when the program is disabled or no code was given.
-   *
-   * Public so SmsOtpService (the mobile-OTP signup path) can reuse the SAME
-   * fire-and-forget call after it creates the User + session via
-   * finalizeAuthSuccess -- one attribution code path for both signup entry points.
-   */
-  attachReferralBestEffort(args: {
-    refereeUserId: string;
-    code?: string | null;
-    ipAddress?: string;
-    mobile?: string | null;
-    email?: string | null;
-  }): void {
-    const ipHash = this.hashIp(args.ipAddress);
-    void this.referralService
-      .attachReferralAtSignup({
-        refereeUserId: args.refereeUserId,
-        code: args.code,
-        signupContext: {
-          ...(ipHash ? { ipHash } : {}),
-          ...(args.mobile ? { refereeMobileSnapshot: args.mobile } : {}),
-          ...(args.email ? { refereeEmailSnapshot: args.email } : {}),
-        },
-      })
-      .catch(() => undefined);
   }
 
   /**
@@ -551,17 +502,6 @@ export class AuthService {
             workspaceCreated: !!createdWorkspaceId,
             ...(createdWorkspaceId ? { workspaceId: createdWorkspaceId } : {}),
           },
-        });
-
-        // Connect Referral Program — best-effort, fire-and-forget attribution.
-        // The user + session exist here; a referral failure must NEVER fail or
-        // delay signup (the service is internally try/caught AND .catch-guarded).
-        this.attachReferralBestEffort({
-          refereeUserId: this.getUserId(user),
-          code: registerDto.referralCode,
-          ipAddress: registerDto.ipAddress,
-          mobile: user.mobile,
-          email: user.email,
         });
 
         if (createdWorkspaceId) {

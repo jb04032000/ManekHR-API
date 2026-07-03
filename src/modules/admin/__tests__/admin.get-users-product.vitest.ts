@@ -21,10 +21,12 @@ import { AdminService } from '../admin.service';
 
 /**
  * Unified users console: product filter + per-product summaries.
- *   - product='connect' constrains the candidate userId set BEFORE pagination,
+ *   - product='connect' constrains the candidate userId set BEFORE pagination
+ *     (Connect is removed from ManekHR; the footprint now only queries legacy
+ *     connect|bundle subscriptions),
  *   - active/trial subs split per product (a bundle sub feeds BOTH summaries),
- *   - isErpUser / isConnectUser flags from footprint (workspace / ConnectProfile)
- *     plus subscription presence.
+ *   - isErpUser from footprint (workspace) plus subscription presence;
+ *     isConnectUser purely from subscription presence.
  */
 const userChain = (rows: any[]) => {
   const chain: any = {};
@@ -40,8 +42,6 @@ function build(opts: {
   users?: any[];
   total?: number;
   subs?: any[];
-  profileRows?: any[];
-  connectDistinct?: any[];
   connectSubDistinct?: any[];
   erpMemberDistinct?: any[];
   erpSubDistinct?: any[];
@@ -63,12 +63,6 @@ function build(opts: {
     distinct: vi.fn(() => Promise.resolve(opts.erpMemberDistinct ?? [])),
     aggregate: vi.fn(() => Promise.resolve([])),
   };
-  const connectProfileModel: any = {
-    distinct: vi.fn(() => Promise.resolve(opts.connectDistinct ?? [])),
-    find: vi.fn(() => ({
-      select: () => ({ lean: () => Promise.resolve(opts.profileRows ?? []) }),
-    })),
-  };
   const svc = new AdminService(
     userModel,
     {} as any, // workspaceModel
@@ -82,32 +76,29 @@ function build(opts: {
     {} as any, // addOnsService
     {} as any, // auditService
     {} as any, // userClaimsCache
-    connectProfileModel,
   );
-  return { svc, userModel, subscriptionModel, connectProfileModel };
+  return { svc, userModel, subscriptionModel };
 }
 
 describe('AdminService.getUsers — product filter', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("product='connect' constrains the candidate set before pagination", async () => {
-    const u1 = new Types.ObjectId();
     const u2 = new Types.ObjectId();
-    const { svc, userModel, connectProfileModel, subscriptionModel } = build({
+    const { svc, userModel, subscriptionModel } = build({
       users: [],
-      connectDistinct: [u1], // ConnectProfile owner
-      connectSubDistinct: [u2], // connect/bundle subscriber
+      connectSubDistinct: [u2], // legacy connect/bundle subscriber
     });
 
     await svc.getUsers({ product: 'connect' } as any);
 
-    expect(connectProfileModel.distinct).toHaveBeenCalledWith('userId');
     expect(subscriptionModel.distinct).toHaveBeenCalledWith(
       'userId',
       expect.objectContaining({ product: { $in: ['connect', 'bundle'] } }),
     );
     const filter = userModel.find.mock.calls[0][0];
-    expect(filter._id.$in).toHaveLength(2);
+    expect(filter._id.$in).toHaveLength(1);
+    expect(String(filter._id.$in[0])).toBe(u2.toString());
   });
 });
 
@@ -140,11 +131,10 @@ describe('AdminService.getUsers — per-product summaries', () => {
           planId: { name: 'B', tier: 'bundle' },
         },
       ],
-      profileRows: [], // connect user proven by sub, not profile
     });
 
     const res: any = await svc.getUsers({ product: 'all' } as any);
-    const byId = new Map(res.data.map((u: any) => [u._id.toString(), u]));
+    const byId = new Map<string, any>(res.data.map((u: any) => [u._id.toString(), u]));
 
     const erp = byId.get(erpId.toString());
     expect(erp.isErpUser).toBe(true);
@@ -184,7 +174,6 @@ describe('AdminService.getUsers — per-product summaries', () => {
           planId: { name: 'Free', tier: 'free' },
         },
       ],
-      profileRows: [],
     });
 
     const res: any = await svc.getUsers({ product: 'all' } as any);
@@ -209,7 +198,6 @@ describe('AdminService.getUsers — per-product summaries', () => {
           planId: { name: 'Pro', tier: 'pro' },
         },
       ],
-      profileRows: [],
     });
 
     const res: any = await svc.getUsers({ product: 'all' } as any);

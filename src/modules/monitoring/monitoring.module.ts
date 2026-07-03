@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueMonitorService } from './queue-monitor.service';
-import { FEED_FANOUT_QUEUE } from '../connect/feed/feed.constants';
 import { DUNNING_QUEUE } from '../subscriptions/billing/services/dunning.service';
 
 /**
@@ -11,7 +10,7 @@ import { DUNNING_QUEUE } from '../subscriptions/billing/services/dunning.service
  * global BullModule connection so QueueMonitorService can read getJobCounts() —
  * it does NOT add processors/workers (those stay in the owning feature modules).
  * Registering an already-registered queue name in a second module is the existing
- * pattern in this repo (connect-feed-fanout is registered in two modules).
+ * pattern in this repo).
  *
  * ScheduleModule.forRoot() is registered once app-wide (SalaryModule), so the
  * @Cron in QueueMonitorService is discovered without re-registering it here.
@@ -20,7 +19,6 @@ import { DUNNING_QUEUE } from '../subscriptions/billing/services/dunning.service
 @Module({
   imports: [
     BullModule.registerQueue(
-      { name: FEED_FANOUT_QUEUE },
       { name: DUNNING_QUEUE },
       { name: 'einvoice-retry' },
     ),

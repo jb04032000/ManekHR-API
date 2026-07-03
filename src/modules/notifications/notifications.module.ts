@@ -15,12 +15,6 @@ import {
   NotificationPreferences,
   NotificationPreferencesSchema,
 } from './schemas/notification-preferences.schema';
-import { Role, RoleSchema } from '../rbac/schemas/role.schema';
-import {
-  WorkspaceMember,
-  WorkspaceMemberSchema,
-} from '../workspaces/schemas/workspace-member.schema';
-import { Workspace, WorkspaceSchema } from '../workspaces/schemas/workspace.schema';
 import { UserDevicesModule } from '../user-devices/user-devices.module';
 
 /**
@@ -43,9 +37,6 @@ import { UserDevicesModule } from '../user-devices/user-devices.module';
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema },
       { name: NotificationPreferences.name, schema: NotificationPreferencesSchema },
-      { name: Role.name, schema: RoleSchema },
-      { name: WorkspaceMember.name, schema: WorkspaceMemberSchema },
-      { name: Workspace.name, schema: WorkspaceSchema },
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],

@@ -764,18 +764,6 @@ export class SmsOtpService {
         });
         await this.clearOtpState(null, norm.full, 'register');
 
-        // Connect Referral Program — best-effort, fire-and-forget attribution.
-        // The User + session exist now (finalizeAuthSuccess created the session);
-        // a referral failure must NEVER fail or delay the OTP signup (the call is
-        // internally try/caught AND .catch-guarded inside attachReferralBestEffort).
-        this.authService.attachReferralBestEffort({
-          refereeUserId: this.userIdStr(createdUser),
-          code: dto.referralCode,
-          ipAddress: dto.ipAddress,
-          mobile: createdUser.mobile,
-          email: createdUser.email,
-        });
-
         if (createdWorkspaceId) {
           const distinctId = this.userIdStr(createdUser);
           this.postHog.identify({

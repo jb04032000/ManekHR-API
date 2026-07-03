@@ -14,7 +14,6 @@ import {
   WorkspaceMemberSchema,
 } from '../workspaces/schemas/workspace-member.schema';
 import { UploadEvent, UploadEventSchema } from './schemas/upload-event.schema';
-import { ConnectAllowanceModule } from '../connect/monetization/connect-allowance.module';
 
 @Module({
   imports: [
@@ -31,7 +30,6 @@ import { ConnectAllowanceModule } from '../connect/monetization/connect-allowanc
     ]),
     // Connect per-user storage allowance source. Self-contained module (no
     // AdsModule dependency), safe to import here without an import cycle.
-    ConnectAllowanceModule,
     // StorageOrphanReconcileCron's @Cron is registered by the single
     // ScheduleModule.forRoot() in SalaryModule (the explorer scans every
     // provider in the app). forRoot() is NOT idempotent in @nestjs/schedule v6 —

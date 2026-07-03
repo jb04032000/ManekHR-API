@@ -5,7 +5,6 @@ import { Queue } from 'bullmq';
 import * as Sentry from '@sentry/nestjs';
 import { SingleFlightService } from '../../common/scheduler/single-flight.service';
 import { minuteBucket } from '../../common/scheduler/period-key';
-import { FEED_FANOUT_QUEUE } from '../connect/feed/feed.constants';
 import { DUNNING_QUEUE } from '../subscriptions/billing/services/dunning.service';
 import { env } from '../../config/env';
 import { evaluateQueueBacklog, QueueCounts } from './queue-backlog.util';
@@ -26,7 +25,7 @@ const EINVOICE_RETRY_QUEUE = 'einvoice-retry';
  * bucket) collapses it to one run across N workers so a multi-worker deploy
  * alerts once, not N times.
  *
- * Cross-module links: reads the queue handles owned by connect/feed (fanout),
+ * Cross-module links: reads queue handles owned by (fanout),
  * subscriptions/billing (dunning) and finance/sales/einvoice (retry) — registered
  * as producer handles in MonitoringModule, NOT new processors. Pure decisioning
  * lives in queue-backlog.util (unit-tested); this service is the glue.
@@ -36,7 +35,6 @@ export class QueueMonitorService {
   private readonly logger = new Logger('QueueMonitor');
 
   constructor(
-    @InjectQueue(FEED_FANOUT_QUEUE) private readonly feedQueue: Queue,
     @InjectQueue(DUNNING_QUEUE) private readonly dunningQueue: Queue,
     @InjectQueue(EINVOICE_RETRY_QUEUE) private readonly einvoiceQueue: Queue,
     private readonly singleFlight: SingleFlightService,
@@ -57,7 +55,6 @@ export class QueueMonitorService {
       failed: env.queueMonitor.failedThreshold,
     };
     const queues: Array<[string, Queue]> = [
-      [FEED_FANOUT_QUEUE, this.feedQueue],
       [DUNNING_QUEUE, this.dunningQueue],
       [EINVOICE_RETRY_QUEUE, this.einvoiceQueue],
     ];

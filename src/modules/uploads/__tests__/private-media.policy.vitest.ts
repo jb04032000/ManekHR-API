@@ -15,41 +15,35 @@ import {
 import { signLocalPrivateKey, verifyLocalPrivateToken } from '../local-private-url';
 
 describe('upload-policies visibility', () => {
-  const PRIVATE = [
-    'connect-inbox-media',
-    'connect-job-resume',
-    'connect-job-voice',
-    'erp-feedback-media',
-  ] as const;
+  const PRIVATE = ['erp-feedback-media'] as const;
 
-  it('marks exactly the chat + job-application categories private', () => {
+  it('marks exactly the feedback-attachment category private', () => {
     for (const c of PRIVATE) {
       expect(isPrivateCategory(c)).toBe(true);
       expect(resolveUploadPolicy(c).visibility).toBe('private');
     }
   });
 
-  it('keeps every OTHER category public (incl. feed voice + ERP docs)', () => {
+  it('keeps every OTHER category public (incl. ERP docs)', () => {
     const publicOnes = UPLOAD_CATEGORIES.filter((c) => !PRIVATE.includes(c as never));
     for (const c of publicOnes) {
       expect(isPrivateCategory(c)).toBe(false);
       // public categories never carry a visibility flag in the resolved policy
       expect(resolveUploadPolicy(c).visibility).toBeUndefined();
     }
-    // explicit guard for the two we deliberately did NOT privatise
-    expect(isPrivateCategory('connect-audio')).toBe(false); // feed voice stays public
+    // explicit guard for one we deliberately did NOT privatise
     expect(isPrivateCategory('documents')).toBe(false); // ERP docs stay public
   });
 
-  it('job-application private categories keep the same size/mime/duration limits they replaced', () => {
-    expect(CATEGORY_POLICIES['connect-job-resume'].mimeTypes).toContain('application/pdf');
-    expect(CATEGORY_POLICIES['connect-job-voice'].duration?.max).toBe(180);
+  it('the private category keeps its image-only mime list', () => {
+    expect(CATEGORY_POLICIES['erp-feedback-media'].mimeTypes).toContain('image/webp');
+    expect(CATEGORY_POLICIES['erp-feedback-media'].mimeTypes).not.toContain('application/pdf');
   });
 });
 
 describe('private-media canonical ref helpers', () => {
   it('round-trips key <-> ref', () => {
-    const key = 'connect-inbox-media/172-ab12.webm';
+    const key = 'erp-feedback-media/172-ab12.webp';
     const ref = toPrivateRef(key);
     expect(ref).toBe(`${PRIVATE_REF_SCHEME}${key}`);
     expect(isPrivateRef(ref)).toBe(true);
@@ -57,7 +51,7 @@ describe('private-media canonical ref helpers', () => {
   });
 
   it('does not mistake a public URL for a ref', () => {
-    expect(isPrivateRef('https://cdn.test/connect-posts/x.jpg')).toBe(false);
+    expect(isPrivateRef('https://cdn.test/profiles/x.jpg')).toBe(false);
     expect(privateRefToKey('https://cdn.test/x.jpg')).toBeNull();
   });
 });
@@ -67,16 +61,16 @@ describe('migration decision function', () => {
 
   it('migrates a public URL on our base to a canonical ref', () => {
     const d = decidePrivateMediaMigration(
-      'https://cdn.zari360.test/connect-inbox-media/1-a.webm',
+      'https://cdn.zari360.test/erp-feedback-media/1-a.webp',
       opts,
     );
     expect(d.action).toBe('migrate');
-    expect(d.objectKey).toBe('connect-inbox-media/1-a.webm');
-    expect(d.newRef).toBe('r2-private://connect-inbox-media/1-a.webm');
+    expect(d.objectKey).toBe('erp-feedback-media/1-a.webp');
+    expect(d.newRef).toBe('r2-private://erp-feedback-media/1-a.webp');
   });
 
   it('is idempotent: skips a value already migrated', () => {
-    const d = decidePrivateMediaMigration('r2-private://connect-inbox-media/1-a.webm', opts);
+    const d = decidePrivateMediaMigration('r2-private://erp-feedback-media/1-a.webp', opts);
     expect(d.action).toBe('skip-already-private');
   });
 
@@ -93,16 +87,16 @@ describe('migration decision function', () => {
 
   it('strips a query string when deriving the object key', () => {
     const d = decidePrivateMediaMigration(
-      'https://cdn.zari360.test/connect-job-resume/cv.pdf?v=2',
+      'https://cdn.zari360.test/erp-feedback-media/shot.webp?v=2',
       opts,
     );
-    expect(d.objectKey).toBe('connect-job-resume/cv.pdf');
+    expect(d.objectKey).toBe('erp-feedback-media/shot.webp');
   });
 });
 
 describe('local-dev signed-URL token', () => {
   const secret = 'unit-secret';
-  const key = 'connect-inbox-media/1-a.webm';
+  const key = 'erp-feedback-media/1-a.webp';
 
   it('a freshly minted token verifies', () => {
     const { exp, sig } = signLocalPrivateKey(key, secret, 1_000_000);
@@ -118,7 +112,7 @@ describe('local-dev signed-URL token', () => {
   it('rejects a tampered key or signature', () => {
     const { exp, sig } = signLocalPrivateKey(key, secret, 1_000_000);
     expect(
-      verifyLocalPrivateToken('connect-inbox-media/other.webm', exp, sig, secret, 1_000_000),
+      verifyLocalPrivateToken('erp-feedback-media/other.webp', exp, sig, secret, 1_000_000),
     ).toBe(false);
     expect(verifyLocalPrivateToken(key, exp, sig + '00', secret, 1_000_000)).toBe(false);
   });

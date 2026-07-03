@@ -1444,10 +1444,14 @@ export const MANEKHR_MODULE_PRESET: { key: AppModule; enabled: boolean }[] = [
 
   // --- EXCLUDED / hidden — manufacturing / ops cluster (hard off) ---
   { key: AppModule.MACHINES, enabled: false },
-  { key: AppModule.LOCATIONS, enabled: false },
   { key: AppModule.RESOURCE_SCOPES, enabled: false },
   { key: AppModule.DOWNTIME, enabled: false },
   { key: AppModule.MAINTENANCE, enabled: false },
+
+  // --- ON — restored standalone (2026-07-04, owner directive): Locations is
+  // no longer part of the excluded Machines cluster. Tracks employees' work
+  // site; managed from Workspace Settings, consumed by Team's location field.
+  { key: AppModule.LOCATIONS, enabled: true },
 ];
 
 export function buildModuleAccess(tier?: string): Array<{

@@ -40,7 +40,6 @@ import { AttendanceModule } from './modules/attendance/attendance.module';
 import { SalaryModule } from './modules/salary/salary.module';
 import { ShiftsModule } from './modules/shifts/shifts.module';
 import { HolidaysModule } from './modules/holidays/holidays.module';
-import { BillsModule } from './modules/bills/bills.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { UserDevicesModule } from './modules/user-devices/user-devices.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
@@ -60,15 +59,11 @@ import { LeaveModule } from './modules/leave/leave.module';
 import { AttendanceImportModule } from './modules/attendance-import/attendance-import.module';
 import { AttendanceStatutoryModule } from './modules/attendance-statutory/attendance-statutory.module';
 import { AnomaliesModule } from './modules/anomalies/anomalies.module';
+// Locations — standalone (2026-07-04): restored as its own feature (owner
+// directive) after the Machines module was removed. Only depends on
+// Workspaces/Subscriptions, never on Machines. Managed from Workspace
+// Settings; consumed by Team's "Work location" field.
 import { LocationsModule } from './modules/locations/locations.module';
-import { MachinesModule } from './modules/machines/machines.module';
-import { ResourceScopesModule } from './modules/resource-scopes/resource-scopes.module';
-import { FinanceModule } from './modules/finance/finance.module';
-import { ProductionLogsModule } from './modules/production-logs/production-logs.module';
-import { DowntimeModule } from './modules/downtime/downtime.module';
-import { MaintenanceModule } from './modules/maintenance/maintenance.module';
-import { WorkOrdersModule } from './modules/work-orders/work-orders.module';
-import { DashboardProductionUtilisationModule } from './modules/dashboard/production-utilisation/dashboard-production-utilisation.module';
 import storageConfig from './config/storage.config';
 import brandingConfig from './config/branding.config';
 import { RedisModule } from './common/redis/redis.module';
@@ -80,36 +75,11 @@ import { MigrationsModule } from './migrations/migrations.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { LegalPagesModule } from './modules/legal-pages/legal-pages.module';
-import { ConnectProfileModule } from './modules/connect/profile/connect-profile.module';
-import { ConnectNetworkModule } from './modules/connect/network/connect-network.module';
-import { ConnectSearchModule } from './modules/connect/search/connect-search.module';
-import { ConnectFeedModule } from './modules/connect/feed/connect-feed.module';
-import { AdsModule } from './modules/connect/ads/ads.module';
-import { ConnectMonetizationModule } from './modules/connect/monetization/connect-monetization.module';
-import { ConnectUsageModule } from './modules/connect/usage/connect-usage.module';
-import { BoostNudgeModule } from './modules/connect/boost-nudges/boost-nudge.module';
-import { MarketplaceModule } from './modules/connect/marketplace/marketplace.module';
-import { ConnectEntitiesModule } from './modules/connect/entities/entities.module';
 // Institutes Phase 2 leaf module (institute-admin credential confirm/decline).
 // Imports ConnectProfileModule + ConnectEntitiesModule; nothing imports it.
-import { ConnectInstitutesModule } from './modules/connect/institutes/connect-institutes.module';
 // Connect Referral Program leaf module. Imports AdsModule (WalletService) +
 // AuditModule + User-schema only; nothing in its import chain reaches AuthModule,
 // so AuthModule imports it (for the signup attribution call) without a cycle.
-import { ConnectReferralsModule } from './modules/connect/referrals/connect-referrals.module';
-import { ConnectViewsModule } from './modules/connect/views/views.module';
-import { ConnectRfqModule } from './modules/connect/rfq/rfq.module';
-import { ConnectJobsModule } from './modules/connect/jobs/jobs.module';
-import { ConnectInboxModule } from './modules/connect/inbox/inbox.module';
-import { ConnectReviewsModule } from './modules/connect/reviews/connect-reviews.module';
-import { ConnectContentReportsModule } from './modules/connect/content-reports/connect-content-reports.module';
-import { ConnectIntroductionsModule } from './modules/connect/introductions/connect-introductions.module';
-import { ConnectBrokerReviewsModule } from './modules/connect/broker-reviews/connect-broker-reviews.module';
-import { ConnectPromotionsModule } from './modules/connect/promotions/promotions.module';
-import { ConnectBannersModule } from './modules/connect/banners/banners.module';
-import { ConnectRevenueModule } from './modules/connect/revenue/revenue.module';
-import { ConnectTagsModule } from './modules/connect/tags/connect-tags.module';
-import { ConnectSitemapModule } from './modules/connect/sitemap/connect-sitemap.module';
 
 @Module({
   imports: [
@@ -301,10 +271,10 @@ import { ConnectSitemapModule } from './modules/connect/sitemap/connect-sitemap.
     AttendanceImportModule,
     AttendanceStatutoryModule,
     AnomaliesModule,
+    LocationsModule,
     SalaryModule,
     ShiftsModule,
     HolidaysModule,
-    BillsModule,
     NotificationsModule,
     UserDevicesModule,
     StatisticsModule,
@@ -315,16 +285,6 @@ import { ConnectSitemapModule } from './modules/connect/sitemap/connect-sitemap.
     SessionsModule,
     SettingsModule,
     AddOnsModule,
-    LocationsModule,
-    MachinesModule,
-    ResourceScopesModule,
-    FinanceModule,
-    ProductionLogsModule,
-    DowntimeModule,
-    MaintenanceModule,
-    // Shop Floor Control — work orders + step DAG (web: app/dashboard/machines/shop-floor).
-    WorkOrdersModule,
-    DashboardProductionUtilisationModule,
     SmsModule,
     FeedbackModule,
     // Admin-managed legal/policy pages (Terms + Privacy CMS): admin CRUD +
@@ -333,42 +293,17 @@ import { ConnectSitemapModule } from './modules/connect/sitemap/connect-sitemap.
     // ManekHR Connect — network / marketplace / jobs layer (Phase 0 scaffold).
     // Profile sub-module ships the ConnectProfile schema + ErpLinkService;
     // CRUD endpoints land in Phase 1.
-    ConnectProfileModule,
-    ConnectNetworkModule,
-    ConnectSearchModule,
-    ConnectFeedModule,
-    AdsModule,
-    ConnectMonetizationModule,
-    ConnectUsageModule,
-    BoostNudgeModule,
-    MarketplaceModule,
-    ConnectEntitiesModule,
     // Institutes Phase 2: institute-admin credential confirm/decline (leaf).
-    ConnectInstitutesModule,
     // Connect Referral Program: referral config + tracking + attribution/qualify/
     // release/summary/admin-log/clawback + the two controllers.
-    ConnectReferralsModule,
-    ConnectViewsModule,
-    ConnectRfqModule,
-    ConnectJobsModule,
-    ConnectInboxModule,
-    ConnectReviewsModule,
-    ConnectContentReportsModule,
     // Broker introductions: a broker introduces a buyer + a seller; both must
     // confirm before the introduction is `confirmed` (anti-gaming core). Leaf.
-    ConnectIntroductionsModule,
     // Broker reviews: a party of a CONFIRMED introduction may leave ONE
     // verified-but-anonymous review of the broker; the broker can only reply
     // once. Anchored to the introduction (the proof). Leaf.
-    ConnectBrokerReviewsModule,
-    ConnectPromotionsModule,
-    ConnectBannersModule,
-    ConnectRevenueModule,
-    ConnectTagsModule,
     // Public, projection-only sitemap reads for the web app's dynamic sitemap
     // index (counts + per-section {ref, updatedAt} chunks). Reuses the over-limit
     // suppression so the listing sitemap matches the public detail-route 404.
-    ConnectSitemapModule,
     // Registers the migration ledger + runner + the MIGRATION_UNITS registry
     // (ADR-0001). Nothing runs on boot — migrations execute via `npm run migrate`
     // / CI or the opt-in RUN_MIGRATIONS_ON_BOOT flag. Listed last so that

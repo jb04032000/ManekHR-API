@@ -19,7 +19,13 @@ import { AuthService } from '../auth/auth.service';
 import { SmsOtpService } from '../auth/services/sms-otp.service';
 import { MailService } from '../mail/mail.service';
 import { SubscriptionMandateService } from '../subscriptions/billing/services/subscription-mandate.service';
-import { ConnectProfileService } from '../connect/profile/connect-profile.service';
+// Connect product removed from ManekHR (2026-07-04). The optional hide/unhide
+// hooks below keep their structural type so the scope-aware deletion flow is
+// untouched; with no provider registered the calls no-op via optional chaining.
+interface ConnectProfileService {
+  hideForConnectDeletion(userId: string): Promise<unknown>;
+  unhideForConnectRecovery(userId: string): Promise<unknown>;
+}
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { EmployerLoan } from '../salary/schemas/employer-loan.schema';
 import { AdvanceRecoveryPlan } from '../salary/schemas/advance-recovery-plan.schema';

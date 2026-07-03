@@ -11,11 +11,9 @@ import {
   TeamMemberDocument,
   TeamMemberDocumentSchema,
 } from './schemas/team-member-document.schema';
-import {
-  MachineShiftAssignment,
-  MachineShiftAssignmentSchema,
-} from '../machines/schemas/machine-shift-assignment.schema';
-import { Machine, MachineSchema } from '../machines/schemas/machine.schema';
+// Relocated stub (Machines module removed 2026-07-04) — only backs the
+// unreachable piece-rate machine-override validation in team.service.ts.
+import { Machine, MachineSchema } from '../salary/schemas/machine.schema';
 import { TeamMobileOtp, TeamMobileOtpSchema } from './schemas/team-mobile-otp.schema';
 import { TeamMemberDocumentsService } from './team-member-documents.service';
 import { UploadsModule } from '../uploads/uploads.module';
@@ -27,11 +25,11 @@ import { WorkspacesModule } from '../workspaces/workspaces.module';
 // imports none of Team/Salary/Attendance, so the dependency direction is acyclic.
 import { ErpMemberCapModule } from '../subscriptions/member-cap/erp-member-cap.module';
 // LocationsModule is imported so TeamService can validate `dto.locationId`
-// against the workspace Locations master list (mirrors MachinesModule). It
-// re-exports both LocationsService (for ensureDefaultLocation) and the
-// MongooseModule that registers the Location model (for direct findOne checks).
-// No circular import: LocationsModule only depends on Workspaces/Subscriptions,
-// neither of which imports TeamModule.
+// against the workspace Locations master list. Locations is a standalone
+// module (2026-07-04) — no longer part of Machines. Re-exports
+// LocationsService (ensureDefaultLocation) + the MongooseModule Location
+// model. No circular import: LocationsModule only depends on
+// Workspaces/Subscriptions, neither of which imports TeamModule.
 import { LocationsModule } from '../locations/locations.module';
 import { MailModule } from '../mail/mail.module';
 import { SmsModule } from '../sms/sms.module';
@@ -46,10 +44,6 @@ import { PermissionNotificationDispatcher } from './permission-notification.disp
     MongooseModule.forFeature([
       { name: TeamMember.name, schema: TeamMemberSchema },
       { name: TeamMemberDocument.name, schema: TeamMemberDocumentSchema },
-      {
-        name: MachineShiftAssignment.name,
-        schema: MachineShiftAssignmentSchema,
-      },
       { name: Machine.name, schema: MachineSchema },
       { name: TeamMobileOtp.name, schema: TeamMobileOtpSchema },
     ]),

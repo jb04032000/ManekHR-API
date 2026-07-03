@@ -6,7 +6,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import * as nodemailer from 'nodemailer';
@@ -16,7 +15,6 @@ import { Workspace } from '../workspaces/schemas/workspace.schema';
 import { WorkspaceMember } from '../workspaces/schemas/workspace-member.schema';
 import { Subscription } from '../subscriptions/schemas/subscription.schema';
 import { Plan, PlanEntitlements } from '../subscriptions/schemas/plan.schema';
-import { ConnectProfile } from '../connect/profile/schemas/connect-profile.schema';
 import { AppSettings } from '../subscriptions/schemas/app-settings.schema';
 import { Tier } from '../subscriptions/schemas/tier.schema';
 import { PlanTier } from '../../common/enums/plan-tier.enum';
@@ -40,7 +38,6 @@ import { CreatePtSlabDto, UpdatePtSlabDto } from './dto/pt-slab.dto';
 import { AuditService } from '../audit/audit.service';
 import { AppModule } from '../../common/enums/modules.enum';
 import { UserClaimsCacheService } from '../users/user-claims-cache.service';
-import { CONNECT_PROFILE_CHANGED } from '../connect/profile/events/connect-profile.events';
 
 interface AdminUserContext {
   _id: string | Types.ObjectId;
@@ -82,18 +79,6 @@ export class AdminService {
     // isAdmin via the grant path elsewhere) so a deactivated user's still-valid
     // access token is rejected by JwtStrategy on the very next request.
     private readonly userClaimsCache: UserClaimsCacheService,
-    // Connect footprint signal for the unified users console: a ConnectProfile is
-    // created the moment a person first enters Connect (person-centric, unique
-    // userId), so its existence — independent of any paid Connect subscription —
-    // is the canonical "is a Connect user" marker.
-    @InjectModel(ConnectProfile.name)
-    private connectProfileModel: Model<ConnectProfile>,
-    // CN-SRCH-2 (feed harden Bucket 5): emit CONNECT_PROFILE_CHANGED on
-    // suspend/restore so the Connect people search index refreshes promptly
-    // (the query-time gate is the actual security boundary; this is a freshness
-    // improvement). Globally available via EventEmitterModule.forRoot(), so no
-    // module import change is needed.
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // NOTE: PT-slab default seeding moved off boot — it now runs via the ledgered
@@ -530,14 +515,6 @@ export class AdminService {
       console.error('[AdminService] Workspace count error:', countError);
     }
 
-    // Connect footprint for this page: a ConnectProfile makes someone a Connect
-    // user even with no paid Connect subscription (the free-fallback majority).
-    const profileRows = await this.connectProfileModel
-      .find({ userId: { $in: userIds } })
-      .select('userId')
-      .lean();
-    const connectProfileSet = new Set(profileRows.map((p) => String(p.userId)));
-
     const enrichedUsers = users.map((user) => {
       const uid: string = user._id.toString();
       const workspaceCount: number = workspaceCountMap.get(uid) || 0;
@@ -548,7 +525,7 @@ export class AdminService {
         workspaceCount,
         // A person can be ERP-only, Connect-only, or both; a bundle user is both.
         isErpUser: workspaceCount > 0 || erpSubscription !== null,
-        isConnectUser: connectProfileSet.has(uid) || connectSubscription !== null,
+        isConnectUser: connectSubscription !== null,
         erpSubscription,
         connectSubscription,
       };
@@ -558,22 +535,17 @@ export class AdminService {
   }
 
   /**
-   * UserIds (as strings) of everyone with a CONNECT footprint: a ConnectProfile
-   * (created on first Connect entry) OR an active/trial connect|bundle
-   * subscription. Backs the `product=connect|both` users filter.
+   * UserIds (as strings) of everyone with a CONNECT footprint. The Connect
+   * product is removed from ManekHR; this now only matches legacy connect|bundle
+   * subscriptions (normally none), keeping the `product=` filter contract
+   * intact for the admin users console.
    */
   private async connectFootprintUserIds(): Promise<Set<string>> {
-    const [profileIds, subIds] = await Promise.all([
-      this.connectProfileModel.distinct('userId'),
-      this.subscriptionModel.distinct('userId', {
-        product: { $in: ['connect', 'bundle'] },
-        status: { $in: ['active', 'trial'] },
-      }),
-    ]);
-    const set = new Set<string>();
-    profileIds.forEach((id) => set.add(String(id)));
-    subIds.forEach((id) => set.add(String(id)));
-    return set;
+    const subIds = await this.subscriptionModel.distinct('userId', {
+      product: { $in: ['connect', 'bundle'] },
+      status: { $in: ['active', 'trial'] },
+    });
+    return new Set<string>(subIds.map((id) => String(id)));
   }
 
   /**
@@ -614,9 +586,6 @@ export class AdminService {
     // OQ-2: isActive changed -> drop the JWT hot-path cache so a deactivation
     // takes effect on the next request, not after the access token expires.
     await this.userClaimsCache.invalidate(id);
-    // CN-SRCH-2: refresh the Connect people index (suspend removes the person
-    // from search; restore re-indexes them). Best-effort, fire-and-forget.
-    this.eventEmitter.emit(CONNECT_PROFILE_CHANGED, { userId: id });
     return user;
   }
 
@@ -747,9 +716,6 @@ export class AdminService {
     await user.save();
     // OQ-2: isActive flipped back to true -> drop the JWT hot-path cache.
     await this.userClaimsCache.invalidate(id);
-    // CN-SRCH-2: re-index the restored user's Connect profile so they become
-    // searchable again promptly. Best-effort, fire-and-forget.
-    this.eventEmitter.emit(CONNECT_PROFILE_CHANGED, { userId: id });
 
     return user;
   }

@@ -19,7 +19,6 @@ vi.mock('@nestjs/mongoose', () => {
 });
 
 import { DefaulterAlertCron } from '../attendance/crons/defaulter-alert.cron';
-import { MaintenanceNotificationsCron } from '../maintenance/maintenance-notifications.cron';
 import { Msg91BalanceService } from '../sms/services/msg91-balance.service';
 import { UnassignedDigestCron } from '../attendance-devices/crons/unassigned-digest.cron';
 import { AddOnsService } from '../add-ons/add-ons.service';
@@ -81,32 +80,7 @@ describe('Tier A final crons — single-flight gating', () => {
     expect(probe).not.toHaveBeenCalled();
   });
 
-  it('MaintenanceNotificationsCron wraps with MAINTENANCE_NOTIFICATIONS key + gates body', async () => {
-    const probe = vi.fn();
-    const granted = lock(true);
-    await new MaintenanceNotificationsCron(
-      findModel(probe) as any,
-      {} as any,
-      {} as any,
-      {} as any,
-      {} as any,
-      granted.svc,
-    ).run();
-    expect(granted.calls[0]).toBe(CronJobKey.MAINTENANCE_NOTIFICATIONS);
-    expect(probe).toHaveBeenCalled();
-
-    const held = lock(false);
-    probe.mockClear();
-    await new MaintenanceNotificationsCron(
-      findModel(probe) as any,
-      {} as any,
-      {} as any,
-      {} as any,
-      {} as any,
-      held.svc,
-    ).run();
-    expect(probe).not.toHaveBeenCalled();
-  });
+  // Maintenance module removed with Machines (2026-07-04) — MaintenanceNotificationsCron gone.
 
   it('UnassignedDigestCron wraps with ATTENDANCE_UNASSIGNED_DIGEST key + gates body', async () => {
     const probe = vi.fn();

@@ -39,35 +39,6 @@ export const UPLOAD_CATEGORIES = [
   // may show another user's data, so it is never world-readable; read paths sign
   // it via PrivateMediaService). Links to: src/modules/feedback.
   'erp-feedback-media',
-  // ManekHR Connect — profile media (Phase 1)
-  'connect-banners',
-  'connect-portfolio',
-  // ManekHR Connect — feed media (Phase 3)
-  'connect-posts',
-  'connect-audio',
-  // ManekHR Connect — marketplace product video. A single short clip per listing
-  // (the listing schema caps it at one); kept its OWN category, separate from the
-  // feed `connect-posts`, so the product-clip duration cap can differ from the
-  // feed cap without coupling the two. Reuses the same upload video pipeline
-  // (content-sniff + media-probe duration + poster ownership) end to end.
-  'connect-product-video',
-  // ManekHR Connect — intro/teaser video for three more surfaces (one short
-  // clip each, capped at one by the owning schema). Each gets its OWN category
-  // (not one shared bucket) so per-surface plan limits can diverge later without
-  // recoupling. Same upload video pipeline (content-sniff + media-probe duration
-  // + poster ownership) as the product clip; mirrors `connect-product-video`.
-  'connect-profile-video',
-  'connect-company-video',
-  'connect-job-video',
-  // ManekHR Connect — inbox media (Phase 7): photos + voice notes in messages
-  'connect-inbox-media',
-  // ManekHR Connect — job-application files (Phase 5). Dedicated PRIVATE buckets
-  // so a resume / apply voice note is never world-readable. They are split out
-  // from the shared `documents` (ERP docs) + public `connect-audio` (feed voice)
-  // categories precisely so privatising them does not drag those public surfaces
-  // private. See `visibility` below + the read-path signing in PrivateMediaService.
-  'connect-job-resume',
-  'connect-job-voice',
 ] as const;
 
 export type UploadCategory = (typeof UPLOAD_CATEGORIES)[number];
@@ -210,122 +181,12 @@ export const CATEGORY_POLICIES: Record<UploadCategory, UploadPolicy> = {
   // compression client-side (a feedback screenshot does not need full res).
   // PRIVATE — a screenshot can contain another user's data; the upload response
   // is a canonical `r2-private://` ref and read paths mint a 1-hour signed URL
-  // via PrivateMediaService. Mirrors the `connect-inbox-media` private pattern,
-  // but image-only + ERP-prefixed (no Connect per-user quota). The 3-attachment
+  // via PrivateMediaService. The 3-attachment
   // cap is enforced by the feedback DTO (ArrayMaxSize), not here (per-file policy).
   'erp-feedback-media': {
     maxBytes: 5 * MB,
     mimeTypes: IMAGE_MIME,
     compression: { maxWidth: 1600, maxHeight: 1600, quality: 0.82, format: 'image/webp' },
-    visibility: 'private',
-  },
-
-  // Connect — profile media (Phase 1).
-  'connect-banners': {
-    maxBytes: 3 * MB,
-    mimeTypes: IMAGE_MIME,
-    // Banners target a 4:1 aspect (LinkedIn convention) — tolerance wide
-    // enough that users uploading 3:1 or 5:1 don't get rejected.
-    image: { aspectRatio: { ratio: 4, tolerance: 0.6 } },
-    // Banners are wide by design — allow a 2400px edge (vs the 1600 default)
-    // so a full-bleed cover stays crisp. Aspect is preserved by the scaler.
-    compression: { maxWidth: 2400, maxHeight: 2400, quality: 0.82, format: 'image/webp' },
-  },
-  'connect-portfolio': {
-    maxBytes: 3 * MB,
-    mimeTypes: IMAGE_MIME,
-    // Portfolio work-samples + RFQ/quote attachments (QuoteComposer reuses this
-    // category). Default 1600px WebP target.
-    compression: { maxWidth: 1600, maxHeight: 1600, quality: 0.82, format: 'image/webp' },
-  },
-
-  // Connect — feed media (Phase 3).
-  'connect-posts': {
-    maxBytes: 20 * MB,
-    mimeTypes: [...IMAGE_MIME, ...VIDEO_MIME, ...DOC_MIME],
-    // Feed video cap (tunable). Only enforced for video/* uploads
-    // (validateMediaConstraints gates the video probe on the MIME family), so
-    // feed photos / docs in this same category are untouched. media-probe fails
-    // closed: an unparseable video duration here is rejected.
-    duration: { max: 120 },
-    // Default image target. Covers feed photos, marketplace listing/product
-    // images, company-page media + collection covers (all route here via
-    // MediaUploadGrid). Only the image MIMEs compress; video/doc bytes are
-    // posted untouched (the FE helper no-ops on non-image files).
-    compression: { maxWidth: 1600, maxHeight: 1600, quality: 0.82, format: 'image/webp' },
-  },
-  'connect-audio': {
-    maxBytes: 10 * MB,
-    mimeTypes: AUDIO_MIME,
-    // Voice notes capped at 3 minutes — matches the wireframe spec.
-    duration: { max: 180 },
-  },
-
-  // Connect — marketplace product video (one short clip per listing). Same video
-  // MIME family + 50MB ceiling as the feed, but a tighter PRODUCT CLIP CAP of 60s
-  // (a buyer-facing product teaser, not a full feed video). Enforced server-side
-  // in media-probe (fail-closed on an unparseable duration) exactly like the feed
-  // path; the video passes through with NO compression (compression is image-only).
-  // Public visibility (a product video is world-readable, like product photos).
-  'connect-product-video': {
-    maxBytes: 50 * MB,
-    mimeTypes: VIDEO_MIME,
-    duration: { max: 60 },
-  },
-
-  // Connect — profile / company-page / job intro video. Each is one short
-  // buyer-or-candidate-facing clip, identical policy to the product clip (same
-  // video MIME family, 50MB ceiling, 60s cap enforced fail-closed in
-  // media-probe, no compression, public). Three SEPARATE categories (not one
-  // shared bucket) so a future per-surface plan limit can differ per surface.
-  'connect-profile-video': {
-    maxBytes: 50 * MB,
-    mimeTypes: VIDEO_MIME,
-    duration: { max: 60 },
-  },
-  'connect-company-video': {
-    maxBytes: 50 * MB,
-    mimeTypes: VIDEO_MIME,
-    duration: { max: 60 },
-  },
-  'connect-job-video': {
-    maxBytes: 50 * MB,
-    mimeTypes: VIDEO_MIME,
-    duration: { max: 60 },
-  },
-
-  // Connect — inbox media (Phase 7): a single upload surface for chat photos
-  // and voice notes. Photos compressed client-side (inbox does not need full
-  // res); audio reuses the 3-minute voice-note cap.
-  'connect-inbox-media': {
-    // 5 MB for now (temporary cap; revisit later). Enforced on the COMPRESSED
-    // bytes by uploadService.preCheckUpload + the BE validateFileWithCategory.
-    maxBytes: 5 * MB,
-    mimeTypes: [...IMAGE_MIME, ...AUDIO_MIME],
-    duration: { max: 180 },
-    compression: { maxWidth: 1920, maxHeight: 1920, quality: 0.82, format: 'image/webp' },
-    // PRIVATE — chat attachments are person-to-person content, never world-readable.
-    visibility: 'private',
-  },
-
-  // Connect — job-application files (Phase 5). Both PRIVATE: a resume / apply
-  // voice note is reachable only through a 1-hour signed link (read-path decorated
-  // by PrivateMediaService). `connect-` prefix => person-centric Connect storage
-  // quota, like every other Connect upload.
-  'connect-job-resume': {
-    // Mirrors the old shared `documents` policy (one PDF/DOC/DOCX <=10MB) the
-    // resume used to land in - kept identical so the apply flow is unchanged
-    // except for which bucket the file lands in.
-    maxBytes: 10 * MB,
-    mimeTypes: DOC_MIME,
-    visibility: 'private',
-  },
-  'connect-job-voice': {
-    // Mirrors the feed `connect-audio` voice policy (the recorder default the
-    // apply form used to reuse) - same 10MB / 3-min cap, just a private bucket.
-    maxBytes: 10 * MB,
-    mimeTypes: AUDIO_MIME,
-    duration: { max: 180 },
     visibility: 'private',
   },
 };
@@ -349,11 +210,8 @@ export function isPrivateCategory(category: UploadCategory): boolean {
  * usual size/MIME/dimension guards.
  *
  * Current targets:
- *  - default 1600px WebP q0.82 — `connect-posts` (feed + listings + company-page
- *    media + collection covers), `connect-portfolio` (portfolio + RFQ/quote).
- *  - 2400px — `connect-banners` (wide by design).
+ *  - default 1600px WebP q0.82.
  *  -  800px — `avatars` (logos / small identity images).
- *  - 1920px — `connect-inbox-media` (chat photos; predates this pass).
  *  - ERP categories (proofs / passbooks / qrcodes / profiles / branding) and all
  *    document / audio / video categories OMIT compression on purpose — lossy
  *    re-encoding would harm QR scannability + financial-evidence legibility.

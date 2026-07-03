@@ -17,7 +17,6 @@ import { Workspace } from '../workspaces/schemas/workspace.schema';
 import { WorkspaceMember } from '../workspaces/schemas/workspace-member.schema';
 import { Subscription } from '../subscriptions/schemas/subscription.schema';
 import { UploadEvent } from './schemas/upload-event.schema';
-import { ConnectAllowanceService } from '../connect/monetization/connect-allowance.service';
 import {
   UPLOAD_CATEGORIES,
   checkUploadPolicy,
@@ -74,9 +73,6 @@ export class UploadsService {
     private subscriptionModel: Model<Subscription>,
     @InjectModel(UploadEvent.name)
     private uploadEventModel: Model<UploadEvent>,
-    // Connect (person-centric) storage allowance source. Imported via
-    // ConnectAllowanceModule (self-contained, no AdsModule cycle).
-    private connectAllowanceService: ConnectAllowanceService,
   ) {
     const provider = this.configService.get<string>('storage.provider');
     this.storageService = provider === 'r2' ? this.r2StorageService : this.localStorageService;
@@ -90,20 +86,16 @@ export class UploadsService {
    * record for it.
    *
    * `uploaderUserId` is the authenticated user (`req.user.sub`), plumbed from
-   * the controller. It is the source of truth for the per-USER Connect quota
-   * and for the ownership-checked delete — never trusted from the client body.
+   * the controller. It is the source of truth for the ownership-checked
+   * delete — never trusted from the client body.
    *
    * Quota attribution is server-derived:
    *  - Workspace path (`workspaceId` supplied): the caller MUST be a member of
    *    that workspace (owner or active member), else 403 — this stops a client
    *    from charging an arbitrary workspace's quota. The workspace tier cap is
    *    then enforced + charged.
-   *  - Connect path (category prefixed `connect-`): a per-USER MB cap is
-   *    enforced regardless of workspace (Connect is person-centric and these
-   *    uploads carry no workspaceId).
-   *
-   * The avatar / identity (legacy) path passes no workspaceId and a non-connect
-   * category, so it skips both quota gates but STILL gets an ownership record.
+     * The avatar / identity (legacy) path passes no workspaceId, so it skips the
+   * quota gate but STILL gets an ownership record.
    */
   async uploadSingle(
     file: any,
@@ -113,7 +105,6 @@ export class UploadsService {
   ): Promise<UploadResponseDto> {
     this.validateCategory(category);
 
-    const isConnectCategory = category.startsWith('connect-');
 
     if (workspaceId) {
       // Server-side attribution: only a member may charge a workspace's quota.
@@ -121,10 +112,6 @@ export class UploadsService {
       await this.enforceStorageQuota(workspaceId, file?.size || 0, file?.mimetype);
     }
 
-    if (isConnectCategory) {
-      // Person-centric cap — independent of any workspace.
-      await this.enforceConnectStorageQuota(uploaderUserId, file?.size || 0);
-    }
 
     this.validateFileWithCategory(file, category);
     // Magic-byte content sniff — runs AFTER the cheap declared-mime/size guard
@@ -374,66 +361,6 @@ export class UploadsService {
       .exec();
     if (!member) {
       throw new ForbiddenException('You do not have access to this workspace');
-    }
-  }
-
-  // ── Connect per-user storage quota (person-centric) ────────────────────
-
-  /**
-   * Sum of a person's non-deleted Connect (`connect-*`) upload bytes, computed
-   * live from the ownership records.
-   *
-   * Scale tradeoff: this is an indexed aggregate (uploaderUserId + deletedAt
-   * compound index, category prefix filter) rather than a maintained live
-   * counter. Acceptable at current Connect upload volume; if it grows hot,
-   * promote to a per-user counter (mirror of `Workspace.storageUsage.bytes`)
-   * incremented on upload / decremented on delete.
-   *
-   * Pre-change uploads have no ownership record, so they do not count toward
-   * usage (acceptable — see the upload-event schema note).
-   */
-  private async getConnectStorageBytes(userId: string | Types.ObjectId): Promise<number> {
-    const uid = this.toObjectId(userId);
-    const agg = await this.uploadEventModel.aggregate([
-      { $match: { uploaderUserId: uid, deletedAt: null, category: { $regex: '^connect-' } } },
-      { $group: { _id: null, total: { $sum: '$fileSizeBytes' } } },
-    ]);
-    return agg[0]?.total ?? 0;
-  }
-
-  /**
-   * Public read of a person's current Connect media usage in MB (rounded to 1
-   * decimal), reusing the SAME aggregation that enforceConnectStorageQuota uses
-   * so the reported figure never drifts from what the upload guard enforces.
-   * Consumed by the Connect usage endpoint (GET /me/connect/usage). Read-only.
-   */
-  async getConnectStorageUsedMb(userId: string | Types.ObjectId): Promise<number> {
-    const bytes = await this.getConnectStorageBytes(userId);
-    return Math.round((bytes / BYTES_PER_MB) * 10) / 10;
-  }
-
-  /**
-   * Enforce the per-USER Connect storage cap (from the Connect allowance
-   * layer; `-1` = unlimited). Throws 413 with current usage + limit when the
-   * incoming file would push the person over their cap.
-   */
-  async enforceConnectStorageQuota(
-    userId: string | Types.ObjectId,
-    incomingBytes: number,
-  ): Promise<void> {
-    const { storageMb } = await this.connectAllowanceService.getAllowances(String(userId));
-    if (storageMb === -1) return; // unlimited
-
-    const currentBytes = await this.getConnectStorageBytes(userId);
-    const capBytes = storageMb * BYTES_PER_MB;
-    if (currentBytes + incomingBytes > capBytes) {
-      const usedMb = (currentBytes / BYTES_PER_MB).toFixed(1);
-      throw new PayloadTooLargeException({
-        code: 'CONNECT_STORAGE_QUOTA_EXCEEDED',
-        message: `Connect storage limit reached (${storageMb} MB). Used: ${usedMb} MB of ${storageMb} MB.`,
-        limitMb: storageMb,
-        currentBytes,
-      });
     }
   }
 

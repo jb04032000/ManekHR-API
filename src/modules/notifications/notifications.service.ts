@@ -4,10 +4,6 @@ import { Model, Types } from 'mongoose';
 import * as Sentry from '@sentry/nestjs';
 import { Notification } from './schemas/notification.schema';
 import { CreateNotificationDto } from './dto/notification.dto';
-import { Role } from '../rbac/schemas/role.schema';
-import { WorkspaceMember } from '../workspaces/schemas/workspace-member.schema';
-import { Workspace } from '../workspaces/schemas/workspace.schema';
-import { AppModule } from '../../common/enums/modules.enum';
 import type { NotificationCategory } from './notification-categories';
 import { USER_TOGGLEABLE_CATEGORIES, BELL_HIDDEN_CATEGORIES } from './notification-categories';
 import { NotificationPreferencesService } from './notification-preferences.service';
@@ -80,12 +76,6 @@ export class NotificationsService {
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<Notification>,
-    @InjectModel(Role.name)
-    private roleModel: Model<Role>,
-    @InjectModel(WorkspaceMember.name)
-    private memberModel: Model<WorkspaceMember>,
-    @InjectModel(Workspace.name)
-    private workspaceModel: Model<Workspace>,
     private readonly preferencesService: NotificationPreferencesService,
     private readonly inPlatformChannel: InPlatformChannel,
     private readonly mobilePushChannel: MobilePushChannel,
@@ -531,105 +521,5 @@ export class NotificationsService {
     const filter = this.scopeByProduct({ recipientId: userId }, product);
     const res = await this.notificationModel.deleteMany(filter).exec();
     return { message: 'Notifications cleared', deletedCount: res.deletedCount ?? 0 };
-  }
-
-  /**
-   * Persist a depreciation-completed notification for every Finance Admin/Accountant
-   * + the workspace owner. Best-effort: never throws.
-   */
-  async sendDepreciationCompleted(
-    workspaceId: string,
-    firmId: string,
-    runSummary: {
-      runMonth: string;
-      assetsProcessed: number;
-      totalDepreciationPaise: number;
-      runId: string;
-    },
-  ): Promise<void> {
-    try {
-      const recipientIds = await this.findFinanceAdminUserIds(workspaceId);
-      if (recipientIds.length === 0) {
-        this.logger.warn(`No finance recipients found for workspace ${workspaceId} firm ${firmId}`);
-        return;
-      }
-
-      const totalRupees = (runSummary.totalDepreciationPaise / 100).toLocaleString('en-IN', {
-        maximumFractionDigits: 2,
-      });
-      const title = `Depreciation posted for ${runSummary.runMonth}`;
-      const message = `${runSummary.assetsProcessed} assets, ₹${totalRupees} total`;
-
-      // Fan-out: create one Notification document per recipient
-      await Promise.all(
-        recipientIds.map((recipientId) =>
-          this.createNotification(workspaceId, {
-            recipientId,
-            title,
-            message,
-            type: 'info',
-            metadata: {
-              entityType: 'depreciation_run',
-              entityId: runSummary.runId,
-              firmId,
-              link: `/dashboard/finance/firms/${firmId}/fixed-assets/depreciation`,
-            },
-          }),
-        ),
-      );
-    } catch (err) {
-      this.logger.error(
-        `Failed to send depreciation notification for workspace ${workspaceId} firm ${firmId}: ${err instanceof Error ? err.message : String(err)}`,
-      );
-      // swallow — never fail the depreciation run because of notification failure
-    }
-  }
-
-  /**
-   * Resolve recipient userIds for finance notifications:
-   *   (a) workspace owner (always notified)
-   *   (b) active WorkspaceMembers whose Role permissions include any finance module
-   * Returns deduplicated string userIds.
-   */
-  private async findFinanceAdminUserIds(workspaceId: string): Promise<string[]> {
-    const wsObjId = new Types.ObjectId(workspaceId);
-    const recipientSet = new Set<string>();
-
-    // (a) Workspace owner
-    const workspace = await this.workspaceModel.findById(wsObjId).select('ownerId').lean().exec();
-    if (workspace?.ownerId) {
-      recipientSet.add((workspace.ownerId as Types.ObjectId).toString());
-    }
-
-    // (b) Roles in this workspace with any finance permission
-    const financeModules: string[] = [
-      AppModule.FINANCE,
-      AppModule.FINANCE_ADMIN,
-      AppModule.FINANCE_ACCOUNTANT,
-    ];
-    const financeRoleIds = await this.roleModel
-      .find({
-        workspaceId: wsObjId,
-        'permissions.module': { $in: financeModules },
-      })
-      .distinct('_id')
-      .exec();
-
-    if (financeRoleIds.length > 0) {
-      const memberUserIds = await this.memberModel
-        .find({
-          workspaceId: wsObjId,
-          status: 'active',
-          roleId: { $in: financeRoleIds },
-          userId: { $ne: null },
-        })
-        .distinct('userId')
-        .exec();
-      (memberUserIds as Array<Types.ObjectId | null>).forEach((uid) => {
-        if (uid) recipientSet.add(uid.toString());
-      });
-    }
-
-    return Array.from(recipientSet);
   }
 }

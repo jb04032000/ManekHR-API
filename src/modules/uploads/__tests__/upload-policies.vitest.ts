@@ -12,8 +12,8 @@ describe('resolveUploadPolicy', () => {
   });
 
   it('uses the tighter of (global, category) for size', () => {
-    // connect-audio is 10MB; global is 50MB; effective = 10MB.
-    expect(resolveUploadPolicy('connect-audio').maxBytes).toBe(10 * MB);
+    // documents is 10MB; global is 50MB; effective = 10MB.
+    expect(resolveUploadPolicy('documents').maxBytes).toBe(10 * MB);
   });
 
   it('intersects MIME lists across layers', () => {
@@ -23,27 +23,6 @@ describe('resolveUploadPolicy', () => {
     expect(types).toEqual(expect.arrayContaining(['image/jpeg', 'image/png']));
     expect(types).not.toContain('video/mp4');
     expect(types).not.toContain('audio/mpeg');
-  });
-
-  it('preserves the duration cap on connect-audio', () => {
-    expect(resolveUploadPolicy('connect-audio').duration?.max).toBe(180);
-  });
-
-  it('caps marketplace product video at 60s, video-only, 50MB, no compression', () => {
-    const p = resolveUploadPolicy('connect-product-video');
-    expect(p.duration?.max).toBe(60);
-    expect(p.maxBytes).toBe(50 * MB);
-    expect(p.mimeTypes).toEqual(
-      expect.arrayContaining(['video/mp4', 'video/webm', 'video/quicktime']),
-    );
-    expect(p.mimeTypes).not.toContain('image/jpeg');
-    // Video passes through untouched (compression is image-only).
-    expect(p.compression).toBeUndefined();
-  });
-
-  it('preserves the aspect-ratio guard on connect-banners', () => {
-    const p = resolveUploadPolicy('connect-banners');
-    expect(p.image?.aspectRatio?.ratio).toBe(4);
   });
 
   it('returns the category default when no plan override exists', () => {
@@ -58,23 +37,17 @@ describe('resolveUploadPolicy', () => {
 });
 
 describe('compression targets (FE-consumed, mirrored to crewroster-web)', () => {
-  it('applies the 1600px WebP default to feed/listing + portfolio/RFQ images', () => {
-    for (const cat of ['connect-posts', 'connect-portfolio'] as const) {
-      const c = resolveUploadPolicy(cat).compression;
-      expect(c).toEqual({ maxWidth: 1600, maxHeight: 1600, quality: 0.82, format: 'image/webp' });
-    }
-  });
-
-  it('allows banners a wider 2400px edge', () => {
-    expect(resolveUploadPolicy('connect-banners').compression?.maxWidth).toBe(2400);
+  it('applies the 1600px WebP default to feedback attachment images', () => {
+    const c = resolveUploadPolicy('erp-feedback-media').compression;
+    expect(c).toEqual({ maxWidth: 1600, maxHeight: 1600, quality: 0.82, format: 'image/webp' });
   });
 
   it('compresses avatars/logos hard (800px)', () => {
     expect(resolveUploadPolicy('avatars').compression?.maxWidth).toBe(800);
   });
 
-  it('leaves ERP evidence + document/audio categories uncompressed', () => {
-    for (const cat of ['proofs', 'passbooks', 'qrcodes', 'documents', 'connect-audio'] as const) {
+  it('leaves ERP evidence + document categories uncompressed', () => {
+    for (const cat of ['proofs', 'passbooks', 'qrcodes', 'profiles', 'branding', 'documents'] as const) {
       expect(resolveUploadPolicy(cat).compression).toBeUndefined();
     }
   });

@@ -32,6 +32,16 @@ export class SubscriptionsController {
     return this.subscriptionsService.getPublicTrialBannerConfig();
   }
 
+  // PUBLIC-safe module-availability config — tells the web which LOCKED
+  // modules to present as "Coming Soon" (card + nav badge) instead of the
+  // plan-upgrade prompt. Presentation-only; SubscriptionGuard still 403s.
+  // Admin edits the list via PATCH /admin/settings { comingSoonModules }.
+  @Public()
+  @Get('public/module-availability')
+  getPublicModuleAvailability() {
+    return this.subscriptionsService.getPublicModuleAvailability();
+  }
+
   @Public()
   @Get('feature-registry')
   getFeatureRegistry() {

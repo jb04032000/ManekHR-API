@@ -571,69 +571,6 @@ export const env = {
     apiKey: process.env.MEILI_API_KEY || '',
   },
 
-  // ---------- ManekHR Connect — Feed ----------
-  // Selects the read-time `For You` ranking strategy (Phase 7b). Default
-  // preserves the additive heuristic; set `chrono` (or a future strategy key)
-  // to swap the algorithm with no code change.
-  //
-  // demoPenalty — flat score multiplier applied (as the LAST multiplier, like
-  // SEEN_RANK_PENALTY) to seeded demo/sample content so real users' content
-  // outranks placeholder content while the community grows. Consumed by the
-  // shared `connect/common/demo-rank.ts` helper (applyDemoPenalty). It is a
-  // down-rank, not an exclusion — a demo item can still surface when nothing
-  // else fills the slot. Default 0.35 (env-tunable via CONNECT_FEED_DEMO_PENALTY).
-  connectFeed: {
-    rankingStrategy: process.env.CONNECT_FEED_RANKING_STRATEGY || 'default-additive',
-    demoPenalty: float(process.env.CONNECT_FEED_DEMO_PENALTY, 0.35),
-  },
-
-  // ---------- ManekHR Connect — Marketplace ----------
-  // Listing moderation switch (consumed by listing.service). Default `false`
-  // preserves the current product decision (new listings publish live, no admin
-  // review). Set CONNECT_LISTING_MODERATION_ENABLED=true in a given environment
-  // to re-introduce the review flow with no code change. See the LISTING_MODERATION
-  // doc block in listing.service.ts for what flipping it re-activates.
-  connectMarketplace: {
-    moderationEnabled: bool(process.env.CONNECT_LISTING_MODERATION_ENABLED, false),
-  },
-
-  // ---------- ManekHR Connect — Feed banner carousel ----------
-  // Kill-switch for the admin-curated feed banner carousel (per Connect
-  // engineering standard #16: every phase ships behind a feature flag). When
-  // OFF the public `GET /connect/banners` read returns `[]` with no DB round-
-  // trip, so the FE carousel renders nothing — instant owner-side disable with
-  // no deploy. Admin CRUD stays reachable regardless (so banners can be staged
-  // while the surface is dark). Default `true`. Consumed by BannerService.
-  connectBanners: {
-    enabled: bool(process.env.CONNECT_BANNERS_ENABLED, true),
-  },
-
-  // ---------- ManekHR Connect — Plan limit enforcement ----------
-  // Master switch for the Connect COUNT limits (listings / storefronts /
-  // company pages / open jobs). Consumed centrally by ConnectAllowanceService's
-  // assertCanCreate* methods, which every creation + reactivation path calls.
-  // Default `true` preserves today's behavior (the caps already ship and are
-  // enforced). Set CONNECT_LIMITS_ENFORCED=false in a given environment to turn
-  // the count caps OFF with no code change (e.g. to stop hard-blocking before
-  // pricing launches). NOTE: this flag does NOT govern the per-user storage cap
-  // (storageMb) — that stays enforced in UploadsService independently.
-  connectLimits: {
-    enforced: bool(process.env.CONNECT_LIMITS_ENFORCED, true),
-  },
-
-  // ---------- ManekHR Connect — Search (SRCH-PERF-1) ----------
-  // Short-TTL Redis prefix cache fronting the Meilisearch engine round-trip on
-  // `GET /connect/search`. A spike of identical typeahead prefixes is absorbed
-  // by the cache instead of all hitting Meili (CONNECT-SEARCH-VERIFICATION-
-  // CHECKLIST.md §2). The cache stores ONLY the viewer-independent engine output
-  // (hit ids + facet counts) keyed on the query/filters — never the post-
-  // hydration result — so the live author-active gate (SRCH-LEAK-4) and the
-  // per-viewer block filter still run on every request. Default 45s sits inside
-  // the spec's 30–60s window; the cache degrades to a direct query when Redis is
-  // absent / faults. Set <= 0 to disable the cache entirely with no code change.
-  connectSearch: {
-    cacheTtlSeconds: num(process.env.CONNECT_SEARCH_CACHE_TTL_SECONDS, 45),
-  },
 } as const;
 
 export type AppEnv = typeof env;

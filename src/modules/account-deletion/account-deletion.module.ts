@@ -11,8 +11,6 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
 import { MailModule } from '../mail/mail.module';
-import { ConnectProfileModule } from '../connect/profile/connect-profile.module';
-import { ConnectAccountPurgeModule } from '../connect/account-purge/connect-account-purge.module';
 import { EmployerLoan, EmployerLoanSchema } from '../salary/schemas/employer-loan.schema';
 import {
   AdvanceRecoveryPlan,
@@ -60,8 +58,6 @@ import {
     // Phase 3 — Scope-1: ConnectProfileService (reversible hide / recovery
     // un-hide) + ConnectContentPurgeService (the Day-30 manifest-driven purge,
     // also run at the Scope-3 finalize seam).
-    ConnectProfileModule,
-    ConnectAccountPurgeModule,
     // Phase 7 — processor cascade: UploadsService deletes the profile-photo
     // object at storage (the one vendor-side artifact the DB scrub can't reach).
     UploadsModule,

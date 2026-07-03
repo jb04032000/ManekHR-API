@@ -17,7 +17,6 @@ import { AuditModule } from '../audit/audit.module';
 // attribution call (attachReferralAtSignup) in AuthService + SmsOtpService. The
 // referrals module imports AdsModule + AuditModule + User-schema only -- nothing
 // in that chain imports AuthModule, so this is a one-way dependency (no cycle).
-import { ConnectReferralsModule } from '../connect/referrals/connect-referrals.module';
 
 @Module({
   imports: [
@@ -38,7 +37,6 @@ import { ConnectReferralsModule } from '../connect/referrals/connect-referrals.m
     SessionsModule,
     AuditModule,
     // ReferralService for the best-effort signup attribution (no cycle: see import note).
-    ConnectReferralsModule,
   ],
   // AccountErasureService (OQ-3) is the admin-triggered DPDP erasure
   // coordinator. Exported so AdminModule can expose the admin-only endpoint

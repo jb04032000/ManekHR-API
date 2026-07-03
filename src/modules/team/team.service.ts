@@ -18,10 +18,12 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model, PopulateOptions, Types } from 'mongoose';
 import { TeamMember } from './schemas/team-member.schema';
 import { deriveWorkspaceCodeBase } from '../workspaces/workspace-code.util';
-import { Machine } from '../machines/schemas/machine.schema';
+// Relocated stub (Machines module removed 2026-07-04) — only backs the
+// unreachable piece-rate machine-override validation below.
+import { Machine } from '../salary/schemas/machine.schema';
 // Location model + service let us validate dto.locationId against the workspace
-// Locations master list (same source the Machines module validates against), so
-// an employee's location can never point at a foreign/deleted Location.
+// Locations master list. Locations is standalone (2026-07-04) — no longer tied
+// to Machines.
 import { Location } from '../locations/schemas/location.schema';
 import { LocationsService } from '../locations/locations.service';
 // Workstream G (Salary hardening): the salary-side member-removal cascade +
@@ -37,7 +39,6 @@ import { AttendanceLifecycleService } from '../attendance/attendance-lifecycle.s
 // LedgerEntry attributed to them must stay archived (the books stay complete).
 // Resolved lazily via moduleRef across the resolution boundary, same as salary
 // + attendance.
-import { BillsLifecycleService } from '../bills/bills-lifecycle.service';
 import { SetPieceRateConfigDto } from './dto/piece-rate-config.dto';
 import {
   CreateTeamMemberDto,
@@ -1615,7 +1616,7 @@ export class TeamService {
       await this.assertUniqueIdentifiers(workspaceId, createDto);
       this.assertDateCoherence(createDto);
 
-      // ── Validate / re-derive location (mirrors MachinesService.create) ──
+      // ── Validate / re-derive location ──
       // Defense-in-depth: ensure at least one Location exists so direct API
       // callers (and first-time single-site shops) never face an empty picker.
       // Idempotent + cheap (count-then-maybe-create), safe to call every time.
@@ -1833,7 +1834,7 @@ export class TeamService {
       await this.assertUniqueIdentifiers(workspaceId, updateDto, memberId);
       this.assertDateCoherence(updateDto);
 
-      // ── Validate / re-derive location (mirrors MachinesService.update) ──
+      // ── Validate / re-derive location ──
       // Only validate when the caller is actually changing locationId. Updates
       // that don't touch locationId (e.g. editing name/pay on a legacy member
       // that only has the free-text `location`) must NOT be blocked here.
@@ -2316,36 +2317,6 @@ export class TeamService {
         if (err instanceof BadRequestException) throw err;
         this.logger.warn(
           `attendance memberHasHistory gate skipped (resolver error) ws=${workspaceId} member=${memberId}: ${
-            (err as Error)?.message ?? err
-          }`,
-        );
-      }
-
-      // Finance/Bills hardening (OQ-FB-1 → A) — the SAME Remove-vs-Delete gate,
-      // finance side: a member with ANY Bill (incl. draft-only), posted
-      // PurchaseBill, posted ExpenseVoucher, or LedgerEntry attributed to them
-      // owns books-of-account records (Bucket B, retained 8y under Companies Act
-      // s.128 / CGST Rule 56 / IT Act s.44AA) and must NOT be hard-deleted — the
-      // books must stay complete. This closes the gap where a finance-only
-      // member (entered/posted bills but no salary or attendance) could slip past
-      // the salary + attendance gates. Resolved lazily via moduleRef; best-effort
-      // on resolver errors (no data is destroyed — we fall through to the
-      // soft-archive-only behaviour).
-      try {
-        const billsLifecycle = this.moduleRef.get<BillsLifecycleService>(BillsLifecycleService, {
-          strict: false,
-        });
-        if (billsLifecycle && (await billsLifecycle.memberHasHistory(workspaceId, memberId))) {
-          throw new BadRequestException({
-            code: 'MEMBER_HAS_HISTORY',
-            message:
-              'This member has finance/bills history (bills, purchase bills, expenses, or ledger entries) that must be retained by law. They stay archived (removed) and cannot be permanently deleted; the system purges retained records only after the statutory window.',
-          });
-        }
-      } catch (err) {
-        if (err instanceof BadRequestException) throw err;
-        this.logger.warn(
-          `finance/bills memberHasHistory gate skipped (resolver error) ws=${workspaceId} member=${memberId}: ${
             (err as Error)?.message ?? err
           }`,
         );

@@ -43,7 +43,6 @@ describe('UploadsService security', () => {
   let workspaceMemberModel: any;
   let subscriptionModel: any;
   let uploadEventModel: any;
-  let connectAllowanceService: any;
   let svc: UploadsService;
 
   const uploaderId = new Types.ObjectId().toHexString();
@@ -70,7 +69,6 @@ describe('UploadsService security', () => {
       updateMany: vi.fn().mockResolvedValue(undefined),
       aggregate: vi.fn(),
     };
-    connectAllowanceService = { getAllowances: vi.fn() };
 
     svc = new UploadsService(
       configService,
@@ -80,7 +78,6 @@ describe('UploadsService security', () => {
       workspaceMemberModel,
       subscriptionModel,
       uploadEventModel,
-      connectAllowanceService,
     );
   });
 
@@ -258,51 +255,4 @@ describe('UploadsService security', () => {
     });
   });
 
-  // ── D. Per-user Connect storage quota ─────────────────────────────────
-
-  describe('enforceConnectStorageQuota', () => {
-    it('allows an upload that stays under the per-user cap', async () => {
-      connectAllowanceService.getAllowances.mockResolvedValue({ storageMb: 500 });
-      uploadEventModel.aggregate.mockResolvedValue([{ total: 100 * MB }]);
-
-      await expect(svc.enforceConnectStorageQuota(uploaderId, 10 * MB)).resolves.toBeUndefined();
-    });
-
-    it('rejects with 413 when the upload would exceed the 500 MB cap', async () => {
-      connectAllowanceService.getAllowances.mockResolvedValue({ storageMb: 500 });
-      uploadEventModel.aggregate.mockResolvedValue([{ total: 499 * MB }]);
-
-      await expect(svc.enforceConnectStorageQuota(uploaderId, 5 * MB)).rejects.toBeInstanceOf(
-        PayloadTooLargeException,
-      );
-    });
-
-    it('respects -1 as unlimited and never queries usage', async () => {
-      connectAllowanceService.getAllowances.mockResolvedValue({ storageMb: -1 });
-
-      await expect(svc.enforceConnectStorageQuota(uploaderId, 9999 * MB)).resolves.toBeUndefined();
-      expect(uploadEventModel.aggregate).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('uploadSingle connect path', () => {
-    it('enforces the per-user connect cap and writes an ownership record', async () => {
-      const file = { size: 1 * MB, mimetype: 'image/jpeg' };
-      const connectSpy = vi.spyOn(svc, 'enforceConnectStorageQuota').mockResolvedValue(undefined);
-      localStorageService.uploadFile.mockResolvedValue({
-        url: 'https://cdn/post.jpg',
-        fileName: 'post.jpg',
-        fileSize: 1 * MB,
-        mimeType: 'image/jpeg',
-      });
-
-      await svc.uploadSingle(file, 'connect-posts', uploaderId);
-
-      expect(connectSpy).toHaveBeenCalledWith(uploaderId, 1 * MB);
-      expect(uploadEventModel.create).toHaveBeenCalledTimes(1);
-      const arg = uploadEventModel.create.mock.calls[0][0];
-      expect(arg.workspaceId).toBeNull();
-      expect(arg.category).toBe('connect-posts');
-    });
-  });
 });

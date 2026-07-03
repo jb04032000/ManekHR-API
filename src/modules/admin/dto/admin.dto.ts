@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsEnum,
   IsMongoId,
@@ -15,6 +16,7 @@ import {
 } from 'class-validator';
 import { PlanEntitlementsDto } from '../../subscriptions/dto/subscription.dto';
 import { PlatformAccess } from '../../../common/enums/platform-access.enum';
+import { AppModule } from '../../../common/enums/modules.enum';
 
 export class AdminPaginationDto {
   @IsOptional()
@@ -216,6 +218,14 @@ export class UpdateSettingsDto {
   @IsOptional()
   @Type(() => TrialBannerSettingsDto)
   trialBanner?: TrialBannerSettingsDto;
+
+  // Full-replace list of modules the web shows as "Coming Soon" when locked
+  // (instead of the upgrade prompt). Saved on its own by the admin Module
+  // Availability card; presentation-only (SubscriptionGuard still 403s).
+  @IsOptional()
+  @IsArray()
+  @IsEnum(AppModule, { each: true })
+  comingSoonModules?: AppModule[];
 }
 
 export class CreateUserDto {

@@ -3,7 +3,6 @@ import { ModuleRef, Reflector } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import type { Request } from 'express';
-import { ResourceScopesService } from '../../modules/resource-scopes/resource-scopes.service';
 import { isWorkspaceOwner } from '../utils/workspace-ownership.util';
 // Side-effect import: registers Express.Request.user + resourceScope so this
 // guard's `getRequest<Request>()` returns a typed object instead of `any`.
@@ -77,27 +76,14 @@ export class ResourceScopeGuard implements CanActivate {
       return true;
     }
 
-    const scopesService = this.moduleRef.get(ResourceScopesService, {
-      strict: false,
-    });
-    const loaded = await scopesService.loadForUser(workspaceId, user.sub);
-
-    // If scope row exists but isActive=false, treat as unscoped (explicit opt-out).
-    if (!loaded.hasScope || !loaded.isActive) {
-      request.resourceScope = {
-        hasScope: false,
-        isOwner: false,
-        scopedMachineIds: [],
-        scopedLocationIds: [],
-      };
-      return true;
-    }
-
+    // Machines/Locations modules removed (2026-07-04) — no scope service can
+    // exist; every non-owner caller is unscoped (matches the isActive:false
+    // opt-out branch this replaces).
     request.resourceScope = {
-      hasScope: true,
+      hasScope: false,
       isOwner: false,
-      scopedMachineIds: loaded.machineIds,
-      scopedLocationIds: loaded.locationIds,
+      scopedMachineIds: [],
+      scopedLocationIds: [],
     };
     return true;
   }

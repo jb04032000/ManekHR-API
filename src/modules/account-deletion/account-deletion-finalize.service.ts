@@ -5,7 +5,12 @@ import * as Sentry from '@sentry/nestjs';
 import { User } from '../users/schemas/user.schema';
 import { AccountErasureService } from '../auth/services/account-erasure.service';
 import { AuditService } from '../audit/audit.service';
-import { ConnectContentPurgeService } from '../connect/account-purge/connect-content-purge.service';
+// Connect product removed from ManekHR (2026-07-04). Structural stand-in type
+// for the optional purge hook; never provided, so the null-guarded branches
+// ('if (!this.connectPurge)') take the skip path.
+interface ConnectContentPurgeService {
+  purgeUserConnectContent(userId: string): Promise<unknown>;
+}
 import { ProcessorErasureService } from './processor-erasure.service';
 import { AppModule } from '../../common/enums/modules.enum';
 

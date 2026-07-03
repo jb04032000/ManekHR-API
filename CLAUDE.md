@@ -1,20 +1,19 @@
-# CrewRoster Backend (NestJS API)
+# ManekHR Backend (NestJS API)
 
-## Zari360 Connect — active build
+ManekHR is ERP-ONLY: staff + salary for diamond-polishing units. The upstream
+"Connect" product (network / marketplace / jobs — `src/modules/connect/*`) was
+PHYSICALLY REMOVED on 2026-07-04. Do not reintroduce Connect modules, routes,
+schemas, or `connect-*` upload categories. Leftover inert compatibility points
+(kept ON PURPOSE — do not "clean up"): `product: 'connect'|'bundle'` enum values
++ `PlanEntitlements.connect` (the ERP member-cap reads `entitlements.connect.
+overLimit*`), User connect fields (account-deletion scope machinery), and the
+ledger-stable no-op migration stubs in `src/migrations/`.
 
-This branch (`zari360-connect`) also builds the **Zari360 Connect** backend modules
-(`src/modules/connect/*`) — the network / marketplace / jobs platform on top of the ERP.
+## Polish Initiative — historical context
 
-**Before any Connect backend work, read `docs/connect/`** — start with
-`docs/connect/README.md`, then `docs/connect/PROGRESS.md` for the current phase. That
-folder holds the master plan, engineering standards, per-phase workflow, identity model,
-and testing strategy. Connect modules follow the same repo conventions below (env
-loader, guards, audit, Sentry, OTel, PostHog, `*.vitest.ts`).
-
-## Polish Initiative — read these FIRST
-
-This repo is part of an active multi-phase polish initiative. Before any
-non-trivial change in this repo, read the workspace-root files:
+This repo descends from an upstream multi-phase polish initiative. The
+workspace-root files below are NOT part of this copy — treat references to them
+as stale upstream context, not active work:
 
 - [`../POLISH-INITIATIVE.md`](../POLISH-INITIATIVE.md) — master meta-plan,
   phase rollout, status tracker, audit findings.

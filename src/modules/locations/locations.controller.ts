@@ -36,6 +36,10 @@ export class LocationsController {
 
   @Get()
   @RequirePermissions(AppModule.LOCATIONS, ModuleAction.VIEW)
+  // Defense-in-depth: reads also require the LOCATIONS module on the plan, so
+  // they 403 when the module is off (it is OFF in the ManekHR preset) instead
+  // of relying on RBAC alone. Mirrors the gate already on the write routes.
+  @RequireSubscription({ module: AppModule.LOCATIONS })
   async findAll(
     @Param('workspaceId') workspaceId: string,
     @Req() req,
@@ -53,6 +57,7 @@ export class LocationsController {
 
   @Get('peek-next-code')
   @RequirePermissions(AppModule.LOCATIONS, ModuleAction.VIEW)
+  @RequireSubscription({ module: AppModule.LOCATIONS })
   peekNextCode(@Param('workspaceId') workspaceId: string) {
     return this.locationsService.peekNextCode(workspaceId).then((code) => ({
       success: true,
@@ -62,6 +67,7 @@ export class LocationsController {
 
   @Get(':locationId')
   @RequirePermissions(AppModule.LOCATIONS, ModuleAction.VIEW)
+  @RequireSubscription({ module: AppModule.LOCATIONS })
   findById(
     @Param('workspaceId') workspaceId: string,
     @Param('locationId') locationId: string,

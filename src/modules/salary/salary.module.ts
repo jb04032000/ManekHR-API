@@ -39,8 +39,8 @@ import { TdsChallanController } from './tds-challan.controller';
 import { BulkEmailJob, BulkEmailJobSchema } from './schemas/bulk-email-job.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { PayslipPdfService } from './payslip-pdf.service';
-import { ProductionLogSchema } from '../production-logs/schemas/production-log.schema';
-import { MachineSchema } from '../machines/schemas/machine.schema';
+import { ProductionLogSchema } from './schemas/production-log.schema';
+import { MachineSchema } from './schemas/machine.schema';
 import {
   PieceRateConfigAudit,
   PieceRateConfigAuditSchema,
@@ -86,12 +86,6 @@ import {
   RegularizationRequest,
   RegularizationRequestSchema,
 } from '../regularization/schemas/regularization-request.schema';
-import {
-  LedgerEntry,
-  LedgerEntrySchema,
-} from '../finance/sales/ledger-posting/ledger-entry.schema';
-import { FirmsModule } from '../finance/firms/firms.module';
-import { LedgerModule } from '../finance/ledger/ledger.module';
 // Phase 6 (member-cap read filter): ErpMemberCapService for scoping the org-
 // scoped salary reports (getSalaryRecords + paginated/summary aggregates) to the
 // allowed member set. ErpMemberCapModule imports none of Team/Salary/Attendance,
@@ -125,6 +119,8 @@ import { ErpMemberCapModule } from '../subscriptions/member-cap/erp-member-cap.m
       { name: Workspace.name, schema: WorkspaceSchema },
       { name: BulkEmailJob.name, schema: BulkEmailJobSchema },
       { name: User.name, schema: UserSchema },
+      // Relocated stubs (Machines module removed 2026-07-04) — only back the
+      // unreachable piece-rate payroll branch. See ./schemas/machine.schema.ts.
       { name: 'ProductionLog', schema: ProductionLogSchema },
       { name: 'Machine', schema: MachineSchema },
       { name: PieceRateConfigAudit.name, schema: PieceRateConfigAuditSchema },
@@ -147,11 +143,7 @@ import { ErpMemberCapModule } from '../subscriptions/member-cap/erp-member-cap.m
       // RegularizationRequest — by name token, for SalaryAbsenceLossService (D-03 approved-check).
       // No RegularizationModule import needed; schema registered directly.
       { name: RegularizationRequest.name, schema: RegularizationRequestSchema },
-      // LedgerEntry — by name token, for SalaryLedgerPostingService (D-06 double-entry posting).
-      { name: LedgerEntry.name, schema: LedgerEntrySchema },
     ]),
-    FirmsModule, // provides FirmsService for firm resolution (D-07)
-    LedgerModule, // provides AccountsService for COA account lookup (D-06/D-10)
     forwardRef(() => TeamModule),
     forwardRef(() => AttendanceModule), // H3-05: circular dep — AttendanceModule also imports SalaryModule via forwardRef
     AttendancePoliciesModule,

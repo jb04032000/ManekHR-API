@@ -35,8 +35,6 @@ import { BackfillConnectProductAndIndexesService } from './backfill-connect-prod
 import { BackfillConnectSubFeatureKeysService } from './backfill-connect-subfeature-keys';
 import { BackfillListingStorefrontService } from './backfill-listing-storefront';
 import { SeedConnectTagsService } from './seed-connect-tags';
-import { Listing, ListingSchema } from '../modules/connect/marketplace/schemas/listing.schema';
-import { ConnectEntitiesModule } from '../modules/connect/entities/entities.module';
 import {
   Msg91CostTable,
   Msg91CostTableSchema,
@@ -49,28 +47,21 @@ import {
 } from '../modules/workspaces/schemas/workspace-member.schema';
 import { Role, RoleSchema } from '../modules/rbac/schemas/role.schema';
 import { LeaveType, LeaveTypeSchema } from '../modules/leave/schemas/leave-type.schema';
-import { ConnectTag, ConnectTagSchema } from '../modules/connect/tags/schemas/connect-tag.schema';
 // --- Ledgered migration runner (ADR-0001, Slice 1: Connect) ---
 import { MigrationRecord, MigrationRecordSchema } from './schemas/migration-record.schema';
 import { MigrationRunnerService } from './migration-runner.service';
 import { SeedConnectAdPlacementsService } from './seed-connect-ad-placements';
 import { BackfillListingModerationService } from './backfill-listing-moderation';
 import { MIGRATION_UNITS, type Migration } from './migration.types';
-import { AdPlacement, AdPlacementSchema } from '../modules/connect/ads/schemas/ad-placement.schema';
-import {
-  ConnectPricingConfig,
-  ConnectPricingConfigSchema,
-} from '../modules/connect/ads/schemas/connect-pricing-config.schema';
 import { env } from '../config/env';
 // --- Slice 2 (Finance) — existing services run via the runner, not onModuleInit ---
-import { GstRateHistoryModule } from '../modules/finance/gst/gst-rate-history/gst-rate-history.module';
-import { GstRateHistoryService } from '../modules/finance/gst/gst-rate-history/gst-rate-history.service';
-import { InventoryMigrationModule } from '../modules/finance/inventory/migrations/inventory-migration.module';
-import { InventoryMigrationService } from '../modules/finance/inventory/migrations/inventory-migration.service';
-import { CessRulesModule } from '../modules/finance/inventory/cess/cess-rules.module';
-import { CessRulesSeed } from '../modules/finance/inventory/cess/cess-rules.seed';
-import { ReminderTemplateModule } from '../modules/finance/reminders/reminder-template/reminder-template.module';
-import { ReminderTemplatesService } from '../modules/finance/reminders/reminder-template/reminder-template.service';
+import {
+  GstRateHistoryStubService,
+  InventoryMigrationStubService,
+  CessRulesSeedStubService,
+  ReminderTemplatesStubService,
+  HsnStubService,
+} from './finance-removed-stubs/finance-migration-stubs';
 // --- Slice 5 (platform + subscription plan-migrations) — existing services run via the runner ---
 import { LocalizationModule } from '../modules/localization/localization.module';
 import { LocalizationService } from '../modules/localization/localization.service';
@@ -79,8 +70,6 @@ import { AttendancePlanMigrationService } from '../modules/subscriptions/attenda
 import { FinancePlanMigrationService } from '../modules/subscriptions/finance-plan-migration.service';
 import { MachinesPlanMigrationService } from '../modules/subscriptions/machines-plan-migration.service';
 // --- ADR-0001 loose ends: HSN code seed (split from its runtime cache) + PT slabs ---
-import { HsnModule } from '../modules/finance/hsn/hsn.module';
-import { HsnService } from '../modules/finance/hsn/hsn.service';
 import { SeedPtSlabsService } from './seed-pt-slabs';
 import { PtSlabConfig, PtSlabConfigSchema } from '../modules/salary/schemas/pt-slab.schema';
 // --- Advance self-service (2026-06-14): worker request_advance grant + advanceRequestPolicy stamp ---
@@ -107,10 +96,6 @@ import { BackfillFinancePayableRoleGrantsService } from './backfill-finance-paya
 // `view`-edge TTL index so view edges become the permanent lifetime-unique
 // dedup marker behind Post.viewCount ---
 import { DropEngagementViewTtlIndexService } from './drop-engagement-view-ttl-index';
-import {
-  EngagementEdge,
-  EngagementEdgeSchema,
-} from '../modules/connect/feed/schemas/engagement-edge.schema';
 // --- Connect suggestions live-owner guard (2026-06-17, ADR-0003): purge orphaned
 // Connect profiles (profile present, owning User gone) so they stop leaking into
 // "people you may know" as empty "Connect member" ghost rows. Raw-connection unit
@@ -275,14 +260,10 @@ const PLAN_MARKETING_CHECKSUMS = {
       { name: WorkspaceMember.name, schema: WorkspaceMemberSchema },
       { name: Role.name, schema: RoleSchema },
       { name: LeaveType.name, schema: LeaveTypeSchema },
-      { name: ConnectTag.name, schema: ConnectTagSchema },
-      { name: Listing.name, schema: ListingSchema },
       // Ledger + the models the two new Connect migration units write to
       // (ADR-0001 Slice 1). Re-registering AdPlacement/ConnectPricingConfig is
       // safe — @nestjs/mongoose reuses the existing connection model.
       { name: MigrationRecord.name, schema: MigrationRecordSchema },
-      { name: AdPlacement.name, schema: AdPlacementSchema },
-      { name: ConnectPricingConfig.name, schema: ConnectPricingConfigSchema },
       // ADR-0001 loose end: model for the dedicated PT-slab seed service (avoids
       // importing the heavy AdminModule just to reach this reference-data seed).
       { name: PtSlabConfig.name, schema: PtSlabConfigSchema },
@@ -292,29 +273,27 @@ const PLAN_MARKETING_CHECKSUMS = {
       { name: Session.name, schema: SessionSchema },
       // ADR-0002: EngagementEdge model so the view-edge TTL drop migration can
       // reach the `connectengagementedges` collection.
-      { name: EngagementEdge.name, schema: EngagementEdgeSchema },
       // Legal pages CMS seed (migration 0047) writes draft Terms/Privacy docs.
       { name: LegalPage.name, schema: LegalPageSchema },
     ]),
     // For the W3 listing->storefront backfill (StorefrontService.getOrCreateDefaultStorefront).
-    ConnectEntitiesModule,
     // Slice 2 (Finance): import the modules that own these services so the
     // runner can call them (each exports its service; none import this module,
     // so no cycle). Their onModuleInit boot hooks were removed.
-    GstRateHistoryModule,
-    InventoryMigrationModule,
-    CessRulesModule,
-    ReminderTemplateModule,
     // Slice 5: owning modules for the platform language seed + the subscription
     // plan-migrations (each exports its service; nothing imports MigrationsModule,
     // so no cycle).
     LocalizationModule,
     SubscriptionsModule,
-    // ADR-0001 loose end: HsnModule exports HsnService so the runner can call its
     // (now-public) seedIfMissing; the HSN finder cache-warm stays on boot.
-    HsnModule,
   ],
   providers: [
+    // Finance-removed no-op stubs (2026-07-04) — see finance-migration-stubs.ts.
+    GstRateHistoryStubService,
+    InventoryMigrationStubService,
+    CessRulesSeedStubService,
+    ReminderTemplatesStubService,
+    HsnStubService,
     SeedDefaultTiersAndPlansService,
     SeedDefaultAddOnsService,
     MigrateProToGrowthService,
@@ -405,10 +384,10 @@ const PLAN_MARKETING_CHECKSUMS = {
         adPlacementsSeed: SeedConnectAdPlacementsService,
         listingModerationBackfill: BackfillListingModerationService,
         // Slice 2 (Finance)
-        gstRateHistory: GstRateHistoryService,
-        inventoryBackfill: InventoryMigrationService,
-        cessRulesSeed: CessRulesSeed,
-        greetingTemplatesSeed: ReminderTemplatesService,
+        gstRateHistory: GstRateHistoryStubService,
+        inventoryBackfill: InventoryMigrationStubService,
+        cessRulesSeed: CessRulesSeedStubService,
+        greetingTemplatesSeed: ReminderTemplatesStubService,
         // Slice 3 (RBAC / team / leave / salary)
         proToGrowth: MigrateProToGrowthService,
         teamAppAccessBackfill: MigrateTeamAppAccessToWorkspaceMembersService,
@@ -437,7 +416,7 @@ const PLAN_MARKETING_CHECKSUMS = {
         machinesPlanMigration: MachinesPlanMigrationService,
         languagesSeed: LocalizationService,
         // ADR-0001 loose ends
-        hsnSeed: HsnService,
+        hsnSeed: HsnStubService,
         ptSlabsSeed: SeedPtSlabsService,
         // Advance self-service (2026-06-14)
         workerRequestAdvanceGrant: BackfillWorkerRequestAdvanceGrantService,
@@ -526,7 +505,7 @@ const PLAN_MARKETING_CHECKSUMS = {
         {
           name: '0007_connect_backfill_listing_moderation',
           kind: 'convergent',
-          checksum: `moderation-enabled=${env.connectMarketplace.moderationEnabled}`,
+          checksum: 'connect-removed-noop',
           run: () => listingModerationBackfill.run(),
         },
         // --- Slice 2 (Finance) ---
@@ -991,10 +970,10 @@ const PLAN_MARKETING_CHECKSUMS = {
         SeedConnectAdPlacementsService,
         BackfillListingModerationService,
         // Slice 2 (Finance)
-        GstRateHistoryService,
-        InventoryMigrationService,
-        CessRulesSeed,
-        ReminderTemplatesService,
+        GstRateHistoryStubService,
+        InventoryMigrationStubService,
+        CessRulesSeedStubService,
+        ReminderTemplatesStubService,
         // Slice 3 (RBAC / team / leave / salary)
         MigrateProToGrowthService,
         MigrateTeamAppAccessToWorkspaceMembersService,
@@ -1023,7 +1002,7 @@ const PLAN_MARKETING_CHECKSUMS = {
         MachinesPlanMigrationService,
         LocalizationService,
         // ADR-0001 loose ends
-        HsnService,
+        HsnStubService,
         SeedPtSlabsService,
         // Advance self-service (2026-06-14)
         BackfillWorkerRequestAdvanceGrantService,

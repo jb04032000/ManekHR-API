@@ -39,7 +39,6 @@ import { WorkspaceRevocationService } from '../../common/workspace-revocation/wo
 import { isWorkspaceOwner } from '../../common/utils/workspace-ownership.util';
 // Type-only — runtime resolution happens via ModuleRef + lazy require to
 // avoid a require-time circular import (FirmsModule → LedgerModule → WorkspacesModule).
-import type { FirmsService } from '../finance/firms/firms.service';
 import type { AddOnsService } from '../add-ons/add-ons.service';
 import type { RoleSeederService } from '../rbac/role-seeder.service';
 import type { LeaveTypeSeederService } from '../leave/leave-type-seeder.service';
@@ -411,37 +410,6 @@ export class WorkspacesService {
         );
         Sentry.captureException(err, {
           tags: { module: 'workspaces', op: 'create.seedLeaveTypes' },
-          extra: { workspaceId: workspace._id.toString(), userId },
-        });
-      }
-
-      // Auto-create the 1:1 Firm record. Workspace = Firm by design — finance
-      // module reads/writes a single firm derived from the workspace. Skipped
-      // user-supplied fields default safely; user can complete via wizard.
-      // Lazy require + ModuleRef.get avoids a require-time circular import
-      // (FirmsModule transitively pulls in WorkspacesModule via LedgerModule).
-      try {
-        const { FirmsService: FirmsServiceClass } = require('../finance/firms/firms.service');
-        const firmsService = this.moduleRef.get<FirmsService>(FirmsServiceClass, {
-          strict: false,
-        });
-        await firmsService.create(workspace._id.toString(), userId, {
-          firmName: createDto.firmName ?? createDto.name,
-          businessType: createDto.businessType ?? 'trading',
-          gstin: createDto.gstin,
-          pan: createDto.pan,
-          fyStartMonth: createDto.fyStartMonth ?? 4,
-        });
-        this.logger.log(`firm auto-created workspace=${workspace._id.toString()}`);
-      } catch (err) {
-        // Do NOT roll back the workspace — finance module gates on firm
-        // completeness via setupChecklistState. Workspace stays usable.
-        this.logger.error(
-          `firm auto-create failed workspace=${workspace._id.toString()}: ${(err as Error)?.message ?? err}`,
-          (err as Error)?.stack,
-        );
-        Sentry.captureException(err, {
-          tags: { module: 'workspaces', op: 'create.firmAutoCreate' },
           extra: { workspaceId: workspace._id.toString(), userId },
         });
       }

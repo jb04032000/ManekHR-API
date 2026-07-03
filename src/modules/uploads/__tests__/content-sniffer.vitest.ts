@@ -1,6 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { resolveUploadPolicy } from '../upload-policies';
+import { resolveUploadPolicy, type UploadPolicy } from '../upload-policies';
 import { evaluateContent, sniffAndCheck } from '../content-sniffer';
+
+// Inline policy fixtures — the removed Connect categories used to provide
+// audio / video / mixed-media policies. The sniffer is category-agnostic (it
+// only reads `mimeTypes` off the policy shape), so literals of the same shape
+// keep every behavioral assertion intact.
+const MB = 1024 * 1024;
+const AUDIO_POLICY: UploadPolicy = {
+  maxBytes: 10 * MB,
+  mimeTypes: ['audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav'],
+};
+const VIDEO_POLICY: UploadPolicy = {
+  maxBytes: 50 * MB,
+  mimeTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
+};
+// Image + video, like a feed-post category — exercises cross-family checks.
+const MIXED_MEDIA_POLICY: UploadPolicy = {
+  maxBytes: 50 * MB,
+  mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm', 'video/quicktime'],
+};
 
 /**
  * Magic-byte content sniffing tests. Buffers below are real, minimal fixtures
@@ -51,14 +70,12 @@ describe('sniffAndCheck — valid media accepted under the right category', () =
     expect(await sniffAndCheck(PNG, 'image/png', resolveUploadPolicy('avatars'))).toBeNull();
   });
 
-  it('accepts a real WebP under connect-portfolio', async () => {
-    expect(
-      await sniffAndCheck(WEBP, 'image/webp', resolveUploadPolicy('connect-portfolio')),
-    ).toBeNull();
+  it('accepts a real WebP under profiles', async () => {
+    expect(await sniffAndCheck(WEBP, 'image/webp', resolveUploadPolicy('profiles'))).toBeNull();
   });
 
-  it('accepts a real MP4 under connect-posts', async () => {
-    expect(await sniffAndCheck(MP4, 'video/mp4', resolveUploadPolicy('connect-posts'))).toBeNull();
+  it('accepts a real MP4 under a video-capable policy', async () => {
+    expect(await sniffAndCheck(MP4, 'video/mp4', VIDEO_POLICY)).toBeNull();
   });
 
   it('accepts a real PDF under documents', async () => {
@@ -112,8 +129,8 @@ describe('sniffAndCheck — spoofed / mismatched content rejected', () => {
 
 describe('sniffAndCheck — equivalence groups (must NOT reject)', () => {
   it('accepts a WebM voice note declared audio/webm but sniffed video/webm', async () => {
-    // connect-audio allows audio/webm; the bytes sniff as video/webm.
-    const v = await sniffAndCheck(WEBM, 'audio/webm', resolveUploadPolicy('connect-audio'));
+    // The audio policy allows audio/webm; the bytes sniff as video/webm.
+    const v = await sniffAndCheck(WEBM, 'audio/webm', AUDIO_POLICY);
     expect(v).toBeNull();
   });
 });
@@ -131,33 +148,33 @@ describe('evaluateContent — pure decision logic', () => {
     ).toBeNull();
   });
 
-  it('treats audio/mp4 <-> video/mp4 as equivalent under connect-audio', () => {
+  it('treats audio/mp4 <-> video/mp4 as equivalent under an audio policy', () => {
     expect(
       evaluateContent({
         declaredMime: 'audio/mp4',
         detectedMime: 'video/mp4',
-        policy: resolveUploadPolicy('connect-audio'),
+        policy: AUDIO_POLICY,
       }),
     ).toBeNull();
   });
 
-  it('treats video/quicktime <-> video/mp4 as equivalent under connect-posts', () => {
+  it('treats video/quicktime <-> video/mp4 as equivalent under a video policy', () => {
     expect(
       evaluateContent({
         declaredMime: 'video/quicktime',
         detectedMime: 'video/mp4',
-        policy: resolveUploadPolicy('connect-posts'),
+        policy: VIDEO_POLICY,
       }),
     ).toBeNull();
   });
 
   it('rejects a cross-family disagreement even when detected is allowed', () => {
-    // connect-posts allows both images and video; declaring video but shipping
-    // an image is a cross-family lie and is rejected.
+    // The mixed policy allows both images and video; declaring video but
+    // shipping an image is a cross-family lie and is rejected.
     const v = evaluateContent({
       declaredMime: 'video/mp4',
       detectedMime: 'image/png',
-      policy: resolveUploadPolicy('connect-posts'),
+      policy: MIXED_MEDIA_POLICY,
     });
     expect(v?.reason).toBe('content-mismatch');
   });

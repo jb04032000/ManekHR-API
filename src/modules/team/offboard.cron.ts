@@ -3,7 +3,6 @@ import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TeamMember } from './schemas/team-member.schema';
-import { MachineShiftAssignment } from '../machines/schemas/machine-shift-assignment.schema';
 import { CRON_SCHEDULES, CRON_TIMEZONES, CronJobKey } from '../../common/constants/cron.constants';
 import { SingleFlightService } from '../../common/scheduler/single-flight.service';
 import { dayBucket } from '../../common/scheduler/period-key';
@@ -14,8 +13,6 @@ export class OffboardCron {
 
   constructor(
     @InjectModel(TeamMember.name) private teamModel: Model<TeamMember>,
-    @InjectModel(MachineShiftAssignment.name)
-    private assignmentModel: Model<MachineShiftAssignment>,
     private readonly singleFlight: SingleFlightService,
   ) {}
 
@@ -76,24 +73,6 @@ export class OffboardCron {
         `Offboarded ${deactivateResult.modifiedCount} members whose last working day has passed`,
       );
 
-      const assignmentResult = await this.assignmentModel.updateMany(
-        {
-          teamMemberId: { $in: ids },
-          isDeleted: false,
-          $or: [
-            { effectiveTo: { $exists: false } },
-            { effectiveTo: null },
-            { effectiveTo: { $gt: now } },
-          ],
-        },
-        { effectiveTo: now },
-      );
-
-      if (assignmentResult.modifiedCount > 0) {
-        this.logger.log(
-          `Cascade-closed ${assignmentResult.modifiedCount} machine assignments for offboarded members`,
-        );
-      }
     } catch (error) {
       this.logger.error('Member offboarding cron job failed:', error?.message);
     }
