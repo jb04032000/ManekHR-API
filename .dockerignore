@@ -1,0 +1,20 @@
+# Keep the build context small + never ship secrets/local state into the image.
+node_modules
+dist
+coverage
+.git
+.github
+.env
+.env.*
+!.env.example
+*.log
+backups
+uploads
+uploads-private
+__tests__
+test
+test-results
+.vscode
+.idea
+Dockerfile
+.dockerignore

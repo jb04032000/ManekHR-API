@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your account portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { background-color: #ffffff; max-width: 600px; margin: 20px auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { color: #333333; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .text { color: #555555; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .button { background-color: #007bff; color: white !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block; }
+        .footer { color: #999999; font-size: 14px; text-align: center; margin-top: 40px; border-top: 1px solid #eeeeee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{brand.emailHeader}}" alt="ManekHR" style="max-width:240px;height:auto;display:block;margin:0 auto 16px;border:0;outline:none;text-decoration:none;" />
+            <h1 class="title">ManekHR</h1>
+        </div>
+
+        <p class="text">Dear {{partyName}},</p>
+        <p class="text">{{firmName}} has shared a secure online portal where you can view and download your invoices, statement, and account summary at any time.</p>
+
+        <div class="button-container">
+            <a href="{{portalUrl}}" class="button">View my account</a>
+        </div>
+
+        <p class="text">{{#if expiryNote}}{{expiryNote}}{{/if}}</p>
+        <p class="text">This is a view-only portal. To settle any balance, please contact {{firmName}} directly. If you were not expecting this email, you can safely ignore it.</p>
+
+        <div class="footer">
+            &copy; 2026 ManekHR. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "//": "Scoped type-check for the Zari360 Connect backend. The full `tsc` OOMs on this repo (known infra debt); this config roots the program at the Connect modules + the seed script so Connect code is type-verified in isolation. Run: `pnpm exec tsc -p tsconfig.connect-check.json`.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/modules/connect/**/*.ts",
+    "scripts/seed-connect.ts",
+    "scripts/connect-auto-post.ts",
+    "scripts/connect-demo-clear.ts",
+    "scripts/connect-demo/**/*.ts",
+    "scripts/backfill-connection-follows.ts"
+  ]
+}

@@ -1,0 +1,61 @@
+# Backend CI (launch — Workstream F). Runs on every PR + push to main.
+# Verified against crewroster-backend/package.json scripts. Each subfolder here is
+# its own git repo, so this workflow lives in (and runs from) the backend repo root.
+name: backend-ci
+
+on:
+  push:
+    branches: [main, zari360-connect]
+  pull_request:
+
+# Cancel superseded PR runs; never cancel a main build.
+concurrency:
+  group: be-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm' # caches ~/.npm (not node_modules); npm ci rebuilds from it
+      # Cache the mongod binary mongodb-memory-server downloads for the vitest
+      # integration suites, so cold CI runs aren't slow/flaky on first download.
+      - name: Cache mongodb-memory-server binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongo-binaries-${{ runner.os }}
+      - run: npm ci
+      # Lint WITHOUT --fix (the package `lint` script adds --fix and mutates files,
+      # which would let a job pass while silently rewriting source).
+      - name: Lint
+        run: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
+      # Primary suite: vitest (*.vitest.ts) — uses in-process mongodb-memory-server,
+      # needs NO external Mongo/Redis service.
+      - name: Unit + integration tests (vitest)
+        run: npm run test:vitest
+      # Secondary legacy suite: jest (*.spec.ts). Smaller; kept as a check.
+      - name: Legacy unit tests (jest)
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  # Typecheck is split out: the script sets --max-old-space-size=16384 and the
+  # full repo tsc is known to be memory-heavy. On a standard 16 GB runner this can
+  # still OOM — if it does, move this job to a larger runner (e.g. a 4-/8-core
+  # larger GitHub-hosted runner). Do NOT lower the heap flag; it is load-bearing.
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Typecheck (tsc --noEmit, large heap)
+        run: npm run typecheck

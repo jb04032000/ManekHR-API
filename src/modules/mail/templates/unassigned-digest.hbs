@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Unmapped Device Users</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { background-color: #ffffff; max-width: 600px; margin: 20px auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { color: #333333; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .text { color: #555555; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }
+        .count-card { background-color: #fce4ec; border: 1px solid #f48fb1; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+        .count-number { font-size: 48px; font-weight: bold; color: #c62828; line-height: 1; }
+        .count-label { font-size: 14px; color: #b71c1c; margin-top: 8px; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .button { background-color: #4F46E5; color: white !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block; }
+        .footer { color: #999999; font-size: 12px; text-align: center; margin-top: 40px; border-top: 1px solid #eeeeee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{brand.emailHeader}}" alt="ManekHR" style="max-width:240px;height:auto;display:block;margin:0 auto 16px;border:0;outline:none;text-decoration:none;" />
+            <h1 class="title">ManekHR</h1>
+        </div>
+
+        <p class="text">Hi {{name}},</p>
+        <p class="text">Your <strong>{{wsName}}</strong> workspace has unmapped device user(s). Attendance punches from these users are not being recorded against any team member.</p>
+
+        <div class="count-card">
+            <div class="count-number">{{unassignedCount}}</div>
+            <div class="count-label">unmapped device user(s)</div>
+        </div>
+
+        <p class="text">Map these device users to team members to ensure attendance punches are correctly attributed.</p>
+
+        <div class="button-container">
+            <a href="{{manageUrl}}" class="button">Map Device Users</a>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 ManekHR. All rights reserved.<br>
+            You are receiving this email because you manage attendance devices in {{wsName}}.<br>
+            To stop receiving these emails, remove the device management permission from your role.
+        </div>
+    </div>
+</body>
+</html>

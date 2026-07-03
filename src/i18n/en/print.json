@@ -1,0 +1,63 @@
+{
+  "common": {
+    "invoice": "Invoice",
+    "date": "Date",
+    "voucherNo": "Voucher No.",
+    "from": "From",
+    "to": "To",
+    "total": "Total",
+    "amountInWords": "Amount in words",
+    "signature": "Authorised Signatory",
+    "thankYou": "Thank you for your business"
+  },
+  "sales": {
+    "taxInvoice": "Tax Invoice",
+    "billOfSupply": "Bill of Supply",
+    "creditNote": "Credit Note",
+    "salesReturn": "Sales Return"
+  },
+  "shipping": {
+    "shipTo": "Ship to",
+    "transporter": "Transporter",
+    "vehicle": "Vehicle / LR"
+  },
+  "purchase": {
+    "purchaseBill": "Purchase Bill",
+    "debitNote": "Debit Note",
+    "purchaseReturn": "Purchase Return"
+  },
+  "receipt": {
+    "receipt": "Receipt",
+    "received": "Received",
+    "modeOfPayment": "Mode of Payment"
+  },
+  "payment": {
+    "payment": "Payment",
+    "paid": "Paid",
+    "paidTo": "Paid To"
+  },
+  "tax": {
+    "cgst": "CGST",
+    "sgst": "SGST",
+    "igst": "IGST",
+    "cess": "Cess",
+    "hsn": "HSN/SAC",
+    "gstin": "GSTIN",
+    "placeOfSupply": "Place of Supply",
+    "reverseCharge": "Tax payable under reverse charge: Yes",
+    "compositionDeclaration": "Composition taxable person, not eligible to collect tax on supplies.",
+    "taxable": "Taxable",
+    "exempt": "Exempt",
+    "nilRated": "Nil Rated"
+  },
+  "numbers": {
+    "rupee": "₹",
+    "rupeesOnly": "Rupees Only",
+    "lakh": "Lakh",
+    "crore": "Crore"
+  },
+  "terms": {
+    "termsHeader": "Terms & Conditions",
+    "defaultTerms": "Goods once sold will not be taken back. Subject to local jurisdiction."
+  }
+}

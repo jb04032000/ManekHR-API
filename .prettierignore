@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+coverage
+.husky
+package-lock.json
+*.log
+*.lock
+.env
+.env.*
+.cache
+*.min.js
+src/i18n/**/*.json
+.debug-runs
+# Embedded font payloads (base64 blobs) — prettier stack-overflows parsing them.
+src/modules/finance/sales/print/fonts/*.js
+src/modules/finance/sales/print/fonts/*.d.ts

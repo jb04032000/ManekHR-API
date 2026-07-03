@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; color: #333;">
+  <img src="{{brand.emailHeader}}" alt="ManekHR" style="max-width:240px;height:auto;display:block;margin:0 auto 16px;border:0;outline:none;text-decoration:none;" />
+  <h2>Level {{level}} approval needed</h2>
+  <p>Hi {{name}},</p>
+  <p>A regularization request for <strong>{{memberName}}</strong> on <strong>{{date}}</strong> has passed prior approval and is now awaiting your level-{{level}} review.</p>
+  <p><strong>Requested status:</strong> {{requestedStatus}}</p>
+  <p><a href="{{reviewUrl}}" style="background: #1677ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Review request</a></p>
+  <hr>
+  <p style="color: #999; font-size: 12px;">Workspace: {{wsName}} — ManekHR</p>
+</body>
+</html>

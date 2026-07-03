@@ -1,0 +1,190 @@
+{
+  "__generated": {
+    "note": "GENERATED FILE — do not edit by hand. Edit the TS source and re-run the export.",
+    "regenerate": "cd crewroster-backend && npm run export:upload-policies",
+    "source": "crewroster-backend/src/modules/uploads/upload-policies.ts",
+    "webSync": "cd crewroster-web && npm run sync:upload-policies"
+  },
+  "categoryPolicies": {
+    "avatars": {
+      "compression": {
+        "format": "image/webp",
+        "maxHeight": 800,
+        "maxWidth": 800,
+        "quality": 0.82
+      },
+      "image": {
+        "aspectRatio": {
+          "ratio": 1,
+          "tolerance": 0.3
+        }
+      },
+      "maxBytes": 1048576,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+    },
+    "branding": {
+      "maxBytes": 5242880,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+    },
+    "connect-audio": {
+      "duration": {
+        "max": 180
+      },
+      "maxBytes": 10485760,
+      "mimeTypes": ["audio/webm", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav"]
+    },
+    "connect-banners": {
+      "compression": {
+        "format": "image/webp",
+        "maxHeight": 2400,
+        "maxWidth": 2400,
+        "quality": 0.82
+      },
+      "image": {
+        "aspectRatio": {
+          "ratio": 4,
+          "tolerance": 0.6
+        }
+      },
+      "maxBytes": 3145728,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+    },
+    "connect-company-video": {
+      "duration": {
+        "max": 60
+      },
+      "maxBytes": 52428800,
+      "mimeTypes": ["video/mp4", "video/webm", "video/quicktime"]
+    },
+    "connect-inbox-media": {
+      "compression": {
+        "format": "image/webp",
+        "maxHeight": 1920,
+        "maxWidth": 1920,
+        "quality": 0.82
+      },
+      "duration": {
+        "max": 180
+      },
+      "maxBytes": 5242880,
+      "mimeTypes": [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "audio/webm",
+        "audio/mpeg",
+        "audio/mp4",
+        "audio/ogg",
+        "audio/wav"
+      ],
+      "visibility": "private"
+    },
+    "connect-job-resume": {
+      "maxBytes": 10485760,
+      "mimeTypes": [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "visibility": "private"
+    },
+    "connect-job-video": {
+      "duration": {
+        "max": 60
+      },
+      "maxBytes": 52428800,
+      "mimeTypes": ["video/mp4", "video/webm", "video/quicktime"]
+    },
+    "connect-job-voice": {
+      "duration": {
+        "max": 180
+      },
+      "maxBytes": 10485760,
+      "mimeTypes": ["audio/webm", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav"],
+      "visibility": "private"
+    },
+    "connect-portfolio": {
+      "compression": {
+        "format": "image/webp",
+        "maxHeight": 1600,
+        "maxWidth": 1600,
+        "quality": 0.82
+      },
+      "maxBytes": 3145728,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+    },
+    "connect-posts": {
+      "compression": {
+        "format": "image/webp",
+        "maxHeight": 1600,
+        "maxWidth": 1600,
+        "quality": 0.82
+      },
+      "duration": {
+        "max": 120
+      },
+      "maxBytes": 20971520,
+      "mimeTypes": [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ]
+    },
+    "connect-product-video": {
+      "duration": {
+        "max": 60
+      },
+      "maxBytes": 52428800,
+      "mimeTypes": ["video/mp4", "video/webm", "video/quicktime"]
+    },
+    "connect-profile-video": {
+      "duration": {
+        "max": 60
+      },
+      "maxBytes": 52428800,
+      "mimeTypes": ["video/mp4", "video/webm", "video/quicktime"]
+    },
+    "documents": {
+      "maxBytes": 10485760,
+      "mimeTypes": [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ]
+    },
+    "erp-feedback-media": {
+      "compression": {
+        "format": "image/webp",
+        "maxHeight": 1600,
+        "maxWidth": 1600,
+        "quality": 0.82
+      },
+      "maxBytes": 5242880,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"],
+      "visibility": "private"
+    },
+    "passbooks": {
+      "maxBytes": 5242880,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+    },
+    "profiles": {
+      "maxBytes": 5242880,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+    },
+    "proofs": {
+      "maxBytes": 5242880,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+    },
+    "qrcodes": {
+      "maxBytes": 1048576,
+      "mimeTypes": ["image/jpeg", "image/png", "image/webp"]
+    }
+  },
+  "planOverrides": {}
+}

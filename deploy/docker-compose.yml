@@ -1,0 +1,100 @@
+# CrewRoster BACKEND deploy — lives INSIDE the backend repo so it ships with the
+# code (hybrid setup: the frontend is on AWS Amplify; this box runs only the API).
+#
+# On EC2:  git clone the backend repo, create deploy/.env (copy .env.example),
+#          then:  docker compose -f deploy/docker-compose.yml up -d --build
+#
+# Build context is `..` (the repo root, where the Dockerfile lives). MongoDB is
+# EXTERNAL (managed Atlas) — set MONGODB_URI in deploy/.env. Redis runs here.
+# The one-shot `migrate` service is the fail-closed gate: backend-web/worker only
+# start after it exits 0 (depends_on: service_completed_successfully).
+name: crewroster-backend
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes', '--requirepass', '${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [internal]
+
+  migrate:
+    build:
+      context: ..
+    image: crewroster-backend:latest
+    command: ['node', 'dist/migrate.js']
+    restart: 'no'
+    env_file: [.env]
+    environment:
+      RUN_MIGRATIONS_ON_BOOT: 'false'
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [internal]
+
+  backend-web:
+    image: crewroster-backend:latest
+    pull_policy: never
+    restart: unless-stopped
+    command: ['node', 'dist/main']
+    env_file: [.env]
+    environment:
+      PROCESS_ROLE: web
+      RUN_MIGRATIONS_ON_BOOT: 'false'
+      PORT: '3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks: [internal]
+
+  backend-worker:
+    image: crewroster-backend:latest
+    pull_policy: never
+    restart: unless-stopped
+    command: ['node', 'dist/main']
+    env_file: [.env]
+    environment:
+      PROCESS_ROLE: worker
+      RUN_MIGRATIONS_ON_BOOT: 'false'
+      PORT: '3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks: [internal]
+
+  # TLS + reverse proxy for the API origin ONLY (api.<DOMAIN> -> backend).
+  # The root <DOMAIN> is served by Amplify, not here.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+    depends_on:
+      - backend-web
+    networks: [internal]
+
+volumes:
+  redis-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  internal:

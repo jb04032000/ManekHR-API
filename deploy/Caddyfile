@@ -1,0 +1,20 @@
+# Caddy reverse proxy + automatic HTTPS for the EC2 BACKEND.
+# Hybrid deploy: the frontend is on AWS Amplify (it owns the root <DOMAIN>), so
+# this box serves only the API origin:
+#   api.<DOMAIN>  -> backend (NestJS, :3000) — API + /iclock device ingest + webhooks
+#
+# DNS: api.<DOMAIN> A/AAAA must point at this EC2 public IP; ports 80+443 open.
+# DOMAIN + ACME_EMAIL come from deploy/.env (passed by compose).
+
+{
+	email {$ACME_EMAIL}
+}
+
+api.{$DOMAIN} {
+	encode zstd gzip
+	# Larger body cap for uploads (chat attachments, documents). Tune as needed.
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy backend-web:3000
+}

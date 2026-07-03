@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Payment Reminder</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #222; max-width: 600px; margin: 0 auto;">
+  <img src="{{brand.emailHeader}}" alt="ManekHR" style="max-width:240px;height:auto;display:block;margin:0 auto 16px;border:0;outline:none;text-decoration:none;" />
+  {{#if isLevel1}}
+    <div style="background: #e8f4fd; padding: 16px; border-left: 4px solid #1890ff;">
+      <h2 style="color: #1890ff; margin: 0;">Friendly Payment Reminder</h2>
+    </div>
+    <p>Dear <strong>{{partyName}}</strong>,</p>
+    <p>This is a gentle reminder that invoice <strong>{{invoiceNumber}}</strong> for <strong>{{amountDue}}</strong> is due on <strong>{{dueDate}}</strong>.</p>
+    <p>If you have already made the payment, please ignore this message.</p>
+  {{/if}}
+
+  {{#if isLevel2}}
+    <div style="background: #fff7e6; padding: 16px; border-left: 4px solid #fa8c16;">
+      <h2 style="color: #fa8c16; margin: 0;">Payment Overdue</h2>
+    </div>
+    <p>Dear <strong>{{partyName}}</strong>,</p>
+    <p>Invoice <strong>{{invoiceNumber}}</strong> for <strong>{{amountDue}}</strong> is now <strong>{{daysPastDue}} days overdue</strong> (due {{dueDate}}).</p>
+    <p>Please arrange payment at the earliest to avoid further reminders.</p>
+  {{/if}}
+
+  {{#if isLevel3}}
+    <div style="background: #fff1f0; padding: 16px; border-left: 4px solid #f5222d;">
+      <h2 style="color: #f5222d; margin: 0;">FINAL NOTICE</h2>
+    </div>
+    <p>Dear <strong>{{partyName}}</strong>,</p>
+    <p>Invoice <strong>{{invoiceNumber}}</strong> for <strong>{{amountDue}}</strong> remains unpaid for <strong>{{daysPastDue}} days</strong>.</p>
+    <p>Please contact us immediately to arrange payment. Continued non-payment may affect your account standing.</p>
+  {{/if}}
+
+  {{#if paymentLink}}
+    <p style="margin: 24px 0;">
+      <a href="{{paymentLink}}" style="background: #1890ff; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Pay Now</a>
+    </p>
+  {{/if}}
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
+  <p style="color: #888; font-size: 12px;">
+    Sent by <strong>{{workspaceName}}</strong> via ManekHR<br>
+    &copy; {{currentYear}} ManekHR
+  </p>
+</body>
+</html>

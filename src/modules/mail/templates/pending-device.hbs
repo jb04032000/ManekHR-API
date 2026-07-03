@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>New Biometric Device Detected</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { background-color: #ffffff; max-width: 600px; margin: 20px auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { color: #333333; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .text { color: #555555; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }
+        .device-card { background-color: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .device-serial { font-size: 18px; font-weight: bold; color: #f57f17; font-family: monospace; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .button { background-color: #4F46E5; color: white !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block; }
+        .footer { color: #999999; font-size: 12px; text-align: center; margin-top: 40px; border-top: 1px solid #eeeeee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{brand.emailHeader}}" alt="ManekHR" style="max-width:240px;height:auto;display:block;margin:0 auto 16px;border:0;outline:none;text-decoration:none;" />
+            <h1 class="title">ManekHR</h1>
+        </div>
+
+        <p class="text">Hi {{name}},</p>
+        <p class="text">A new biometric device has started pushing data to your <strong>{{wsName}}</strong> workspace on ManekHR.</p>
+
+        <div class="device-card">
+            <div class="device-serial">SN: {{serial}}</div>
+        </div>
+
+        <p class="text">Attendance records from this device will <strong>not</strong> be saved until you approve it in your dashboard.</p>
+
+        <div class="button-container">
+            <a href="{{approveUrl}}" class="button">Review &amp; Approve Device</a>
+        </div>
+
+        <p class="text">If you did not add this device, you can ignore this email or revoke it in the Devices section of your attendance settings.</p>
+
+        <div class="footer">
+            &copy; 2026 ManekHR. All rights reserved.<br>
+            You are receiving this email because you manage attendance devices in {{wsName}}.
+        </div>
+    </div>
+</body>
+</html>

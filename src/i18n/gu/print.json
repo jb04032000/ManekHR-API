@@ -1,0 +1,63 @@
+{
+  "common": {
+    "invoice": "ઇન્વૉઇસ",
+    "date": "તારીખ",
+    "voucherNo": "વાઉચર નં.",
+    "from": "પ્રેષક",
+    "to": "પ્રાપક",
+    "total": "કુલ",
+    "amountInWords": "રકમ શબ્દોમાં",
+    "signature": "અધિકૃત સહી કરનાર",
+    "thankYou": "આપના વ્યવસાય બદલ આભાર"
+  },
+  "sales": {
+    "taxInvoice": "કર બીજક",
+    "billOfSupply": "પુરવઠા બીલ",
+    "creditNote": "ક્રેડિટ નોટ",
+    "salesReturn": "વેચાણ વળતર"
+  },
+  "shipping": {
+    "shipTo": "ડિલિવરી સ્થળ",
+    "transporter": "ટ્રાન્સપોર્ટર",
+    "vehicle": "વાહન / LR"
+  },
+  "purchase": {
+    "purchaseBill": "ખરીદ બીલ",
+    "debitNote": "ડેબિટ નોટ",
+    "purchaseReturn": "ખરીદ વળતર"
+  },
+  "receipt": {
+    "receipt": "પહોંચ",
+    "received": "મળ્યું",
+    "modeOfPayment": "ચુકવણીની રીત"
+  },
+  "payment": {
+    "payment": "ચુકવણી",
+    "paid": "ચૂકવેલ",
+    "paidTo": "ચૂકવેલ પ્રતિ"
+  },
+  "tax": {
+    "cgst": "CGST",
+    "sgst": "SGST",
+    "igst": "IGST",
+    "cess": "Cess",
+    "hsn": "HSN/SAC",
+    "gstin": "GSTIN",
+    "placeOfSupply": "પુરવઠા સ્થળ",
+    "reverseCharge": "રિવર્સ ચાર્જ હેઠળ કર ચૂકવવાપાત્ર: હા",
+    "compositionDeclaration": "કમ્પોઝિશન કરપાત્ર વ્યક્તિ, પુરવઠા પર કર વસૂલવા માટે પાત્ર નથી.",
+    "taxable": "કરપાત્ર",
+    "exempt": "મુક્ત",
+    "nilRated": "શૂન્ય દરનું"
+  },
+  "numbers": {
+    "rupee": "₹",
+    "rupeesOnly": "રૂપિયા ફક્ત",
+    "lakh": "લાખ",
+    "crore": "કરોડ"
+  },
+  "terms": {
+    "termsHeader": "નિયમો અને શરતો",
+    "defaultTerms": "વેચેલ માલ પાછો લેવામાં આવશે નહીં. સ્થાનિક અધિકારક્ષેત્રને આધીન."
+  }
+}

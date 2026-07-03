@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Verify your email</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { background-color: #ffffff; max-width: 600px; margin: 20px auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { color: #333333; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .text { color: #555555; font-size: 16px; line-height: 1.5; margin-bottom: 20px; }
+        .otp-box { background-color: #f5f7ff; border: 1px solid #d6dcff; border-radius: 8px; padding: 24px; margin: 28px 0; text-align: center; }
+        .otp-code { color: #1a237e; font-size: 36px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace; }
+        .notice { background-color: #fff8e1; border-left: 4px solid #f9a825; padding: 12px 16px; color: #5d4037; font-size: 14px; line-height: 1.5; margin: 20px 0; border-radius: 4px; }
+        .footer { color: #999999; font-size: 14px; text-align: center; margin-top: 40px; border-top: 1px solid #eeeeee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{brand.emailHeader}}" alt="ManekHR" style="max-width:240px;height:auto;display:block;margin:0 auto 16px;border:0;outline:none;text-decoration:none;" />
+            <h1 class="title">Verify your email</h1>
+        </div>
+
+        <p class="text">Hi there,</p>
+        <p class="text">Use the code below to finish creating your ManekHR account.</p>
+
+        <div class="otp-box">
+            <div class="otp-code">{{otp}}</div>
+        </div>
+
+        <div class="notice">
+            This code expires in <strong>{{expiresInMinutes}} minutes</strong>. Don't share it with anyone — ManekHR staff will never ask you for this code. If you didn't try to sign up, you can safely ignore this email.
+        </div>
+
+        <div class="footer">
+            &copy; 2026 ManekHR. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

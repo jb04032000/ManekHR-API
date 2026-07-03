@@ -1,0 +1,53 @@
+# Backend deploy — SSH rollout to the EC2 Docker host (hybrid: frontend on Amplify).
+#
+# On push to main, this connects to the EC2 box and runs deploy/deploy.sh, which
+# rebuilds the image and brings the stack up. The fail-closed MIGRATION GATE lives
+# in the compose (the one-shot `migrate` service): the API only starts after
+# migrations exit 0, so a failed migration aborts the rollout AND fails this job.
+#
+# Why migrate runs ON THE BOX (not in this CI runner): Redis runs inside the EC2
+# docker network and is NOT reachable from GitHub, so the single-flight migration
+# gate must run there. Quality gates (lint / test / build / typecheck) run
+# separately on every push in ci.yml.
+#
+# ── REQUIRED GitHub repo secrets ──────────────────────────────────────────────
+#   (Settings -> Secrets and variables -> Actions -> New repository secret)
+#   EC2_HOST     — the box's public IP or hostname (e.g. api.zari360.in)
+#   EC2_USER     — SSH user (e.g. ubuntu)
+#   EC2_SSH_KEY  — the PRIVATE SSH key (full PEM contents) authorized on the box
+#   EC2_APP_DIR  — absolute path to the cloned repo on the box
+#                  (e.g. /home/ubuntu/crewroster-backend)
+#
+# One-time on a PRE-EXISTING database: SSH in once and run
+#   docker compose -f deploy/docker-compose.yml run --rm migrate node dist/migrate.js --baseline
+# to stamp historical backfills, THEN let this workflow run normally. For a
+# brand-new empty Atlas DB, skip that — the first normal run migrates everything.
+name: backend-deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Serialize prod deploys FIFO; never cancel an in-flight rollout/migration.
+concurrency:
+  group: prod-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production # gates prod secrets + (optional) required approval
+    steps:
+      - name: Roll out to EC2 (build -> migration gate -> serve)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true # stop on the first failed command (incl. a failed migrate gate)
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.EC2_APP_DIR }}"
+            git pull --ff-only
+            bash deploy/deploy.sh

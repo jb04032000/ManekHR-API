@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Machine Maintenance Reminder</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #222; max-width: 600px; margin: 0 auto;">
+  <img src="{{brand.emailHeader}}" alt="ManekHR" style="max-width:240px;height:auto;display:block;margin:0 auto 16px;border:0;outline:none;text-decoration:none;" />
+  {{#if isOverdue}}
+    <div style="background: #fff1f0; padding: 16px; border-left: 4px solid #f5222d;">
+      <h2 style="color: #f5222d; margin: 0;">Maintenance Overdue: {{machineName}}</h2>
+    </div>
+    <p>Maintenance for <strong>{{machineName}}</strong> is overdue by <strong>{{daysOverdue}} days</strong>.</p>
+  {{else}}
+    <div style="background: #f6ffed; padding: 16px; border-left: 4px solid #52c41a;">
+      <h2 style="color: #52c41a; margin: 0;">Upcoming Maintenance: {{machineName}}</h2>
+    </div>
+    <p>Maintenance for <strong>{{machineName}}</strong> is due in <strong>{{daysUntilDue}} days</strong>.</p>
+  {{/if}}
+  <p>Last maintenance: <strong>{{lastMaintenanceDate}}</strong></p>
+  <p>Please schedule and log the next maintenance from the Machines page in ManekHR.</p>
+  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
+  <p style="color: #888; font-size: 12px;">
+    Sent by <strong>{{workspaceName}}</strong> via ManekHR<br>
+    &copy; {{currentYear}} ManekHR
+  </p>
+</body>
+</html>

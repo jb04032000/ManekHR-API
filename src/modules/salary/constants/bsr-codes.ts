@@ -1,0 +1,510 @@
+export interface BsrEntry {
+  bsrCode: string;
+  bankName: string;
+  branchName: string;
+  city: string;
+  state: string;
+}
+
+export const BSR_CODES: BsrEntry[] = [
+  {
+    bsrCode: '0240229',
+    bankName: 'State Bank of India',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '0240235',
+    bankName: 'State Bank of India',
+    branchName: 'CG Road',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '0010024',
+    bankName: 'State Bank of India',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '0010001',
+    bankName: 'State Bank of India',
+    branchName: 'Parliament Street',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+  {
+    bsrCode: '0670001',
+    bankName: 'State Bank of India',
+    branchName: 'Bangalore Main',
+    city: 'Bangalore',
+    state: 'Karnataka',
+  },
+  {
+    bsrCode: '0400001',
+    bankName: 'State Bank of India',
+    branchName: 'Chennai Main',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+  },
+  {
+    bsrCode: '0420001',
+    bankName: 'State Bank of India',
+    branchName: 'Hyderabad Main',
+    city: 'Hyderabad',
+    state: 'Telangana',
+  },
+  {
+    bsrCode: '0280001',
+    bankName: 'State Bank of India',
+    branchName: 'Kolkata Main',
+    city: 'Kolkata',
+    state: 'West Bengal',
+  },
+  {
+    bsrCode: '0390001',
+    bankName: 'State Bank of India',
+    branchName: 'Pune Main',
+    city: 'Pune',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '0560001',
+    bankName: 'State Bank of India',
+    branchName: 'Surat Main',
+    city: 'Surat',
+    state: 'Gujarat',
+  },
+
+  {
+    bsrCode: '5130001',
+    bankName: 'HDFC Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '5130010',
+    bankName: 'HDFC Bank',
+    branchName: 'Navrangpura',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '5130025',
+    bankName: 'HDFC Bank',
+    branchName: 'Surat Main',
+    city: 'Surat',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '5130050',
+    bankName: 'HDFC Bank',
+    branchName: 'Vadodara Main',
+    city: 'Vadodara',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '5120001',
+    bankName: 'HDFC Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '5120010',
+    bankName: 'HDFC Bank',
+    branchName: 'Andheri',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '5110001',
+    bankName: 'HDFC Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+  {
+    bsrCode: '5160001',
+    bankName: 'HDFC Bank',
+    branchName: 'Bangalore Main',
+    city: 'Bangalore',
+    state: 'Karnataka',
+  },
+  {
+    bsrCode: '5170001',
+    bankName: 'HDFC Bank',
+    branchName: 'Chennai Main',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+  },
+  {
+    bsrCode: '5180001',
+    bankName: 'HDFC Bank',
+    branchName: 'Hyderabad Main',
+    city: 'Hyderabad',
+    state: 'Telangana',
+  },
+  {
+    bsrCode: '5190001',
+    bankName: 'HDFC Bank',
+    branchName: 'Kolkata Main',
+    city: 'Kolkata',
+    state: 'West Bengal',
+  },
+  {
+    bsrCode: '5200001',
+    bankName: 'HDFC Bank',
+    branchName: 'Pune Main',
+    city: 'Pune',
+    state: 'Maharashtra',
+  },
+
+  {
+    bsrCode: '6290001',
+    bankName: 'ICICI Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '6290015',
+    bankName: 'ICICI Bank',
+    branchName: 'Surat Main',
+    city: 'Surat',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '6280001',
+    bankName: 'ICICI Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '6270001',
+    bankName: 'ICICI Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+  {
+    bsrCode: '6310001',
+    bankName: 'ICICI Bank',
+    branchName: 'Bangalore Main',
+    city: 'Bangalore',
+    state: 'Karnataka',
+  },
+  {
+    bsrCode: '6320001',
+    bankName: 'ICICI Bank',
+    branchName: 'Chennai Main',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+  },
+  {
+    bsrCode: '6300001',
+    bankName: 'ICICI Bank',
+    branchName: 'Hyderabad Main',
+    city: 'Hyderabad',
+    state: 'Telangana',
+  },
+  {
+    bsrCode: '6330001',
+    bankName: 'ICICI Bank',
+    branchName: 'Kolkata Main',
+    city: 'Kolkata',
+    state: 'West Bengal',
+  },
+  {
+    bsrCode: '6340001',
+    bankName: 'ICICI Bank',
+    branchName: 'Pune Main',
+    city: 'Pune',
+    state: 'Maharashtra',
+  },
+
+  {
+    bsrCode: '6220001',
+    bankName: 'Axis Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '6220010',
+    bankName: 'Axis Bank',
+    branchName: 'Surat Main',
+    city: 'Surat',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '6210001',
+    bankName: 'Axis Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '6200001',
+    bankName: 'Axis Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+  {
+    bsrCode: '6230001',
+    bankName: 'Axis Bank',
+    branchName: 'Bangalore Main',
+    city: 'Bangalore',
+    state: 'Karnataka',
+  },
+  {
+    bsrCode: '6240001',
+    bankName: 'Axis Bank',
+    branchName: 'Chennai Main',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+  },
+  {
+    bsrCode: '6250001',
+    bankName: 'Axis Bank',
+    branchName: 'Hyderabad Main',
+    city: 'Hyderabad',
+    state: 'Telangana',
+  },
+  {
+    bsrCode: '6260001',
+    bankName: 'Axis Bank',
+    branchName: 'Kolkata Main',
+    city: 'Kolkata',
+    state: 'West Bengal',
+  },
+  {
+    bsrCode: '6270010',
+    bankName: 'Axis Bank',
+    branchName: 'Pune Main',
+    city: 'Pune',
+    state: 'Maharashtra',
+  },
+
+  {
+    bsrCode: '7260001',
+    bankName: 'Kotak Mahindra Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '7250001',
+    bankName: 'Kotak Mahindra Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '7240001',
+    bankName: 'Kotak Mahindra Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+  {
+    bsrCode: '7270001',
+    bankName: 'Kotak Mahindra Bank',
+    branchName: 'Bangalore Main',
+    city: 'Bangalore',
+    state: 'Karnataka',
+  },
+  {
+    bsrCode: '7280001',
+    bankName: 'Kotak Mahindra Bank',
+    branchName: 'Chennai Main',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+  },
+
+  {
+    bsrCode: '0600001',
+    bankName: 'Bank of Baroda',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '0600010',
+    bankName: 'Bank of Baroda',
+    branchName: 'Surat Main',
+    city: 'Surat',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '0600020',
+    bankName: 'Bank of Baroda',
+    branchName: 'Vadodara Main',
+    city: 'Vadodara',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '0610001',
+    bankName: 'Bank of Baroda',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '0620001',
+    bankName: 'Bank of Baroda',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+  {
+    bsrCode: '0630001',
+    bankName: 'Bank of Baroda',
+    branchName: 'Bangalore Main',
+    city: 'Bangalore',
+    state: 'Karnataka',
+  },
+
+  {
+    bsrCode: '0240301',
+    bankName: 'Punjab National Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '0020001',
+    bankName: 'Punjab National Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+  {
+    bsrCode: '0020010',
+    bankName: 'Punjab National Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+
+  {
+    bsrCode: '0240401',
+    bankName: 'Union Bank of India',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '0530001',
+    bankName: 'Union Bank of India',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+
+  {
+    bsrCode: '7360001',
+    bankName: 'Yes Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '7350001',
+    bankName: 'Yes Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '7340001',
+    bankName: 'Yes Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+
+  {
+    bsrCode: '6380001',
+    bankName: 'IndusInd Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '6370001',
+    bankName: 'IndusInd Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '6360001',
+    bankName: 'IndusInd Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+
+  {
+    bsrCode: '7100001',
+    bankName: 'IDBI Bank',
+    branchName: 'Ahmedabad Main',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+  },
+  {
+    bsrCode: '7110001',
+    bankName: 'IDBI Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '7120001',
+    bankName: 'IDBI Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+
+  {
+    bsrCode: '6460001',
+    bankName: 'Canara Bank',
+    branchName: 'Bangalore Main',
+    city: 'Bangalore',
+    state: 'Karnataka',
+  },
+  {
+    bsrCode: '6470001',
+    bankName: 'Canara Bank',
+    branchName: 'Mumbai Main',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  {
+    bsrCode: '6480001',
+    bankName: 'Canara Bank',
+    branchName: 'Delhi Main',
+    city: 'New Delhi',
+    state: 'Delhi',
+  },
+];
+
+export function searchBsrCodes(query: string): BsrEntry[] {
+  if (!query || query.length < 2) return [];
+
+  const normalizedQuery = query.toLowerCase();
+  return BSR_CODES.filter(
+    (entry) =>
+      entry.bankName.toLowerCase().includes(normalizedQuery) ||
+      entry.branchName.toLowerCase().includes(normalizedQuery) ||
+      entry.city.toLowerCase().includes(normalizedQuery) ||
+      entry.bsrCode.includes(normalizedQuery),
+  ).slice(0, 10);
+}

@@ -1,0 +1,63 @@
+{
+  "common": {
+    "invoice": "इनवॉइस",
+    "date": "दिनांक",
+    "voucherNo": "वाउचर सं.",
+    "from": "प्रेषक",
+    "to": "प्राप्तकर्ता",
+    "total": "कुल",
+    "amountInWords": "राशि शब्दों में",
+    "signature": "अधिकृत हस्ताक्षरकर्ता",
+    "thankYou": "आपके व्यवसाय के लिए धन्यवाद"
+  },
+  "sales": {
+    "taxInvoice": "कर बीजक",
+    "billOfSupply": "आपूर्ति बिल",
+    "creditNote": "क्रेडिट नोट",
+    "salesReturn": "बिक्री वापसी"
+  },
+  "shipping": {
+    "shipTo": "डिलीवरी पता",
+    "transporter": "ट्रांसपोर्टर",
+    "vehicle": "वाहन / LR"
+  },
+  "purchase": {
+    "purchaseBill": "क्रय बिल",
+    "debitNote": "डेबिट नोट",
+    "purchaseReturn": "क्रय वापसी"
+  },
+  "receipt": {
+    "receipt": "रसीद",
+    "received": "प्राप्त",
+    "modeOfPayment": "भुगतान का तरीका"
+  },
+  "payment": {
+    "payment": "भुगतान",
+    "paid": "चुकाया",
+    "paidTo": "प्राप्तकर्ता"
+  },
+  "tax": {
+    "cgst": "CGST",
+    "sgst": "SGST",
+    "igst": "IGST",
+    "cess": "Cess",
+    "hsn": "HSN/SAC",
+    "gstin": "GSTIN",
+    "placeOfSupply": "आपूर्ति का स्थान",
+    "reverseCharge": "रिवर्स चार्ज के तहत कर देय: हाँ",
+    "compositionDeclaration": "कंपोजीशन करयोग्य व्यक्ति, आपूर्ति पर कर वसूलने का पात्र नहीं।",
+    "taxable": "कर योग्य",
+    "exempt": "छूट प्राप्त",
+    "nilRated": "शून्य दर"
+  },
+  "numbers": {
+    "rupee": "₹",
+    "rupeesOnly": "रुपये केवल",
+    "lakh": "लाख",
+    "crore": "करोड़"
+  },
+  "terms": {
+    "termsHeader": "नियम एवं शर्तें",
+    "defaultTerms": "बेचा गया माल वापस नहीं लिया जाएगा। स्थानीय क्षेत्राधिकार के अधीन।"
+  }
+}

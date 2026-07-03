@@ -1,0 +1,14 @@
+{
+  "name": "zari360-connect-inbox-load-test",
+  "private": true,
+  "type": "module",
+  "description": "Inbox 100k load-test harness — run separately from the app (not part of the NestJS build).",
+  "scripts": {
+    "smoke": "node socketio-storm.mjs",
+    "storm": "node socketio-storm.mjs"
+  },
+  "dependencies": {
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.1"
+  }
+}

@@ -1,0 +1,185 @@
+## a complete guide for all language/translation management scenarios:
+
+Language & Translation Management Guide
+Overview of Data Model
+Each translation document has these fields:
+{
+languageCode: string; // "en", "es", "hi", etc.
+namespace: string; // "common", "auth", "attendance", etc.
+key: string; // e.g., "save", "login.button"
+value: string; // e.g., "Guardar"
+platforms: string[]; // ["mobile"], ["web"], or ["mobile", "web"]
+updatedBy: string | null;
+}
+
+---
+
+Case 1: Fresh Database - Add Languages + Translations
+Scenario: You deleted the entire database and want to rebuild everything.
+Step 1: Start Backend (Auto-creates Languages)
+cd crewroster-backend
+npm run start:dev
+This automatically runs ensureLanguagesExist() which creates:
+
+- en (English) - default
+- es (Spanish)
+- gu-en (Gujarati-English)
+  Step 2: Seed Translations from Static JSON Files
+  npm run seed:translations
+  Output shows:
+  en: mobile 289 keys, web 256 keys → 440 total
+  es: mobile 289 keys, web 256 keys → 440 total  
+  gu-en: mobile 289 keys, web 426 keys → 559 total
+  The script automatically:
+- Merges mobile + web translations
+- Tags keys found in both as platforms: ['mobile', 'web']
+- Tags mobile-only as platforms: ['mobile']
+- Tags web-only as platforms: ['web']
+
+---
+
+Case 2: Languages Exist But Empty - Seed Translations
+Scenario: You have languages but no translation strings.
+npm run seed:translations
+
+---
+
+Case 3: Add New Language via Admin Panel
+Scenario: You want to add Hindi (hi) language.
+Step 1: Add Language in Admin Panel
+
+1. Go to /admin/localization
+2. Click Add Language button
+3. Fill form:
+   - Language Code: hi
+   - Language Name: Hindi
+   - Native Name: हिन्दी
+   - Example Text: नमस्ते
+     Step 2: Copy Translations from Default Language
+     After adding, you have empty translations. Click Copy from Default to copy all English strings to Hindi.
+     Step 3: Translate Using Import (Optional)
+     If you have a translated JSON file, import it:
+     {
+     "common": {
+     "save": "सहेजें",
+     "delete": "हटाएं",
+     "cancel": "रद्द करें"
+     },
+     "auth": {
+     "login": "लॉगिन",
+     "logout": "लॉगआउट"
+     }
+     }
+     Important - Platform Tagging During Import:
+     When you import JSON, you can specify platform:
+
+- Leave empty → Both platforms ["mobile", "web"]
+- Select "Mobile" → Only mobile ["mobile"]
+- Select "Web" → Only web ["web"]
+  This matters because:
+- Mobile-only keys won't show in web app
+- Web-only keys won't show in mobile app
+
+---
+
+Case 4: Import Translated JSON - Platform Handling
+Example: You translated en.json to Hindi manually
+File: hi.json
+{
+"common": {
+"save": "सहेजें",
+"delete": "हटाएं"
+},
+"attendance": {
+"clockIn": "आने का समय",
+"clockOut": "जाने का समय"
+}
+}
+Import in Admin Panel
+
+1. Select the language (Hindi)
+2. Click Import JSON
+3. Paste your JSON
+4. Choose platform:
+   - Both → Keys work on mobile + web
+   - Mobile only → Only appears in mobile app
+   - Web only → Only appears in web app
+     Platform Filter in Admin Panel
+     In the Translations tab, you can filter:
+
+- All Platforms - shows everything
+- Mobile - only shows keys where platforms includes "mobile"
+- Web - only shows keys where platforms includes "web"
+
+---
+
+Case 5: Edit Existing Translation's Platform
+Scenario: You want to change which platforms a key applies to.
+
+1. Find the translation in the grid
+2. Click Edit (pencil icon)
+3. In the Platform dropdown, select:
+   - ["mobile"] - mobile only
+   - ["web"] - web only
+   - ["mobile", "web"] - both
+
+---
+
+Case 6: Bulk Operations
+Copy from Default (One Language)
+
+1. Select target language
+2. Click Copy from Default
+3. All English strings are copied (with empty values for non-English)
+   Export All Translations
+4. Select language (e.g., English)
+5. Click Export
+6. Downloads en.json with all translation keys
+   Import Full JSON (Replace Values)
+   Use this to replace all values for a language with your translated JSON.
+
+---
+
+Case 7: Troubleshooting
+No Languages Showing
+
+# Restart backend - languages auto-create
+
+npm run start:dev
+No Translations Showing
+
+# Seed translations from mobile/web JSON
+
+npm run seed:translations
+Mismatch Between Mobile/Web Keys
+Run seed to sync:
+npm run seed:translations
+
+---
+
+Quick Reference: Commands
+Action
+Create languages (auto)
+Seed translations
+Full reset
+Force overwrite
+
+---
+
+JSON Import Format Reference
+{
+"namespace1": {
+"key1": "value1",
+"key2": "value2"
+},
+"namespace2": {
+"nested": {
+"key3": "value3"
+}
+}
+}
+This creates:
+
+- namespace1::key1 = "value1"
+- namespace1::key2 = "value2"
+- namespace2.nested.key3 = "value3"
