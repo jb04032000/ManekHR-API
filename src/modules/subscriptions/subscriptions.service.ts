@@ -14,7 +14,11 @@ import { Cron } from '@nestjs/schedule';
 import * as Sentry from '@sentry/node';
 import { Plan, PlanEntitlements } from './schemas/plan.schema';
 import { Subscription } from './schemas/subscription.schema';
-import { AppSettings, DEFAULT_COMING_SOON_MODULES } from './schemas/app-settings.schema';
+import {
+  AppSettings,
+  COMPLETED_MODULES_NOT_COMING_SOON,
+  DEFAULT_COMING_SOON_MODULES,
+} from './schemas/app-settings.schema';
 import { Tier } from './schemas/tier.schema';
 import { Workspace } from '../workspaces/schemas/workspace.schema';
 import { WorkspaceMember } from '../workspaces/schemas/workspace-member.schema';
@@ -1284,8 +1288,11 @@ export class SubscriptionsService implements OnApplicationBootstrap {
    */
   async getPublicModuleAvailability(): Promise<{ comingSoonModules: string[] }> {
     const settings = await this.appSettingsModel.findOne().exec();
+    const comingSoonModules = settings?.comingSoonModules ?? [...DEFAULT_COMING_SOON_MODULES];
     return {
-      comingSoonModules: settings?.comingSoonModules ?? [...DEFAULT_COMING_SOON_MODULES],
+      comingSoonModules: comingSoonModules.filter(
+        (module) => !COMPLETED_MODULES_NOT_COMING_SOON.has(module),
+      ),
     };
   }
 

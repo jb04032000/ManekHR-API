@@ -4,7 +4,7 @@ import { AppModule } from '../../../common/enums/modules.enum';
 
 /**
  * Modules flagged "Coming Soon" by default on a fresh DB: the ManekHR
- * not-yet-built set (attendance group, accounting group, machines group).
+ * not-yet-built set (accounting group and machines group).
  * The flag only changes the LOCKED presentation (Coming Soon card instead of
  * the Upgrade prompt) — a workspace whose plan enables the module is
  * unaffected. Admin-editable anytime via PATCH /admin/settings
@@ -13,11 +13,6 @@ import { AppModule } from '../../../common/enums/modules.enum';
  */
 export const DEFAULT_COMING_SOON_MODULES: AppModule[] = [
   // Time & Attendance group — not completed yet
-  AppModule.ATTENDANCE,
-  AppModule.LEAVE,
-  AppModule.REGULARIZATION,
-  AppModule.SHIFTS,
-  AppModule.HOLIDAYS,
   // Accounting group (bill / finance) — not completed yet
   AppModule.FINANCE,
   AppModule.INVENTORY,
@@ -32,6 +27,16 @@ export const DEFAULT_COMING_SOON_MODULES: AppModule[] = [
   AppModule.DOWNTIME,
   AppModule.MAINTENANCE,
 ];
+
+// Completed modules must never be presented as "Coming Soon", even if an older
+// AppSettings document still carries the pre-completion defaults.
+export const COMPLETED_MODULES_NOT_COMING_SOON = new Set<AppModule>([
+  AppModule.ATTENDANCE,
+  AppModule.LEAVE,
+  AppModule.REGULARIZATION,
+  AppModule.SHIFTS,
+  AppModule.HOLIDAYS,
+]);
 
 /**
  * Site-wide 45-day free-trial BANNER config. Admin-dynamic: the admin can turn

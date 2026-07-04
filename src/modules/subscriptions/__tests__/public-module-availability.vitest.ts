@@ -58,14 +58,30 @@ describe('SubscriptionsService.getPublicModuleAvailability', () => {
     expect(cfg).toEqual({ comingSoonModules: ['finance', 'machines'] });
   });
 
+  it('filters completed Time & Attendance modules out of a stored legacy list', async () => {
+    const svc = buildSvc(
+      makeAppSettings({
+        comingSoonModules: ['attendance', 'leave', 'shifts', 'holidays', 'finance'],
+      }),
+    );
+
+    const cfg = await svc.getPublicModuleAvailability();
+
+    expect(cfg).toEqual({ comingSoonModules: ['finance'] });
+  });
+
   it('falls back to the ManekHR default set when AppSettings doc is absent (fresh DB)', async () => {
     const svc = buildSvc(makeAppSettings(null));
 
     const cfg = await svc.getPublicModuleAvailability();
 
     expect(cfg.comingSoonModules).toEqual(DEFAULT_COMING_SOON_MODULES);
-    // Attendance group + accounting group + machines group are seeded.
-    expect(cfg.comingSoonModules).toContain('attendance');
+    // Completed Time & Attendance modules are no longer labelled "Coming Soon".
+    expect(cfg.comingSoonModules).not.toContain('attendance');
+    expect(cfg.comingSoonModules).not.toContain('leave');
+    expect(cfg.comingSoonModules).not.toContain('shifts');
+    expect(cfg.comingSoonModules).not.toContain('holidays');
+    // Excluded product groups still use the coming-soon presentation when locked.
     expect(cfg.comingSoonModules).toContain('finance');
     expect(cfg.comingSoonModules).toContain('machines');
   });
